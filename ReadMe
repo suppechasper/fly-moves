@@ -1,10 +1,11 @@
-Rscript requires several libraires to be installed:
+The R scripts requires several libraires to be installed:
 MASS, RColorBrewer, cluster, hmm.discnp, depmix, shapes
 
 And for transport stuff my package "mop" which also requires the CPLEX
 optimization library from IBM.
 
-Not well documented yet. Hard to figure what inputs are expected to the
-different methods ....
+Not well documented yet, some of it deprecated, i.e. expects featurs 
+in different format than they are now extracted. Hard to figure what 
+inputs are expected to the different functions ....
 
 
