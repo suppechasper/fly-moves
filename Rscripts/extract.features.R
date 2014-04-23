@@ -184,6 +184,16 @@ extract.features <- function(index, lT=6, rm.na=T, std=0){
 }
 
 
+extract.all.features <- function(lT=6, rm.na=T){
+  data <- list()
+  for( i in 1:length(files)){
+    print(i)
+    data[[i]] = extract.features(i, lT, rm.na)
+  }
+  data
+}
+
+
 
 #Extract features with noise added and avergae over nRuns
 extract.all.features.expected <- function(lT=6, rm.na=T, nRuns=10, std=0.06){
@@ -276,267 +286,84 @@ get.outer.rim <- function(i){
 
 
 
-
-
-
-#--- older methods
-
-extract.all.features <- function(lT=6, rm.na=T){
-  data <- list()
-  for( i in 1:length(files)){
-    print(i)
-    data[[i]] = extract.features(i, lT, rm.na)
-  }
-  data
-}
-
-
-
-
-
-extract.segments <- function(index, len, off = len/2){
-  x <- read.table(files[index], sep=",", header=T)
+extract.all.segments <- function(features, k){
+  Slist = list()
   
-  irim = get.inner.rim(index);
-  orim = get.outer.rim(index);
- 
-  v1 = x;
-  v1[,1] = v1[,1] - irim$mean[1] 
-  v1[,2] = v1[,2] - irim$mean[2] 
-  dirim = irim$r - sqrt( rowSums(v1^2) )
+  for(i in 1:length(features)){
+    Slist[[i]] = extract.segments(features[[i]], k) 
+     print(i)
+  }
+
+  Slist
+}
 
 
-  v2 = x;
-  v2[,1] = v2[,1] - orim$mean[1] 
-  v2[,2] = v2[,2] - orim$mean[2] 
-  dorim = orim$r - sqrt( rowSums(v2^2) )
 
+extract.segments  <- function(X, k){    
+   n = length( X$lengths )
+     lengths=c()
+     curvature=c()
+     dirim=c()
+     dorim=c()
+     time=c()
+     x=c()
+     y=c()
+     rx=c()
+     ry=c()
+     for(j in 1:k){
+        lengths = cbind( lengths, X$lengths[j:(n-k+j)])
+        curvature = cbind( curvature, X$curvature[j:(n-k+j)])
+        dirim = cbind( dirim, X$dirim[j:(n-k+j)])
+        dorim = cbind( dorim, X$dorim[j:(n-k+j)])
+        time = cbind( time, X$time[j:(n-k+j)])
+        x= cbind( x,X$x[j:(n-k+j),1])
+        y = cbind( y,X$x[j:(n-k+j),2])
+        rx= cbind( rx,X$ris[j:(n-k+j),1])
+        ry = cbind( ry,X$ris[j:(n-k+j),2])
+
+    }
+    C = matrix(0, nrow=nrow(lengths), ncol=11)
+
+      start1 = which(X$time > 5400 & X$dirim > 0)
+      start1 = X$time[start1[1]]
+      start2 = start1+300
+      start3 = start2+600
+      for( k in 1:nrow(C) ){
+        C[k, 1] = sum( S$conds[[k]]$time < start1 )
+          C[k, 2] = sum( time[k, ] > start1 & S$conds[[k]]$time < start2 )
+          C[k, 3] = sum( time[k, ] > start2 & S$conds[[k]]$time < start3 )
+          C[k, 4] = sum( time[k, ] > start3 & S$conds[[k]]$time < 10800 )
+          C[k, 5] = sum( time[k,] > 10800 )
+          C[k, 6] = which.max(C[k, 1:5])
+          C[k, 7] = mean(time[k,]) - start1
+
+          C[k, 8] =  sum(dorim[k,] < 20)
+          C[k, 9] = sum( dorim[k,] >= 20 & S$conds[[k]]$dirim < -5)
+          C[k, 10] = sum( dirim[k,] > -5 )
+          C[k, 11] = which.max(C[k, 8:10])
+      }
+    colnames(C) <- c("before", "odor1", "odor2", "odor3", "after", "maxOdor",
+        "timeToOdor", "outer", "middler", "inner", "maxPos");
+
+   list( lengths = lengths, curvature=curvature, dirim=dirim, dorim=dorim,
+       time=time,x=x, y=y, rx=rx, ry=ry, C=as.data.frame(C), id=X$id)
+
+}
+
+
+extract.sample.segments <- function(S, len, off=len/2){
+  d = dim(S$lengths)
+  index = 1
+  sample = list()
+  for( i in seq(1,(d[1]-len-1), off) ){
+    sample[[index]] = S[i:(i+len-1), ]
+    index = index +1  
+  }
   
-    
-  d = dim(x)
-  segsX1 = matrix(0, nrow=d[1]-len, ncol=len)
-  segsX2 = matrix(0, nrow=d[1]-len, ncol=len)
-  segsDO = matrix(0, nrow=d[1]-len, ncol=len)
-  segsDI = matrix(0, nrow=d[1]-len, ncol=len)
-  times = matrix(0, nrow=d[1]-len, ncol=len)
-  for( i in seq(1,(d[1]-len), off) ){
-    segsX1[i, ] = x[i:(i+len-1), 1]    
-    segsX2[i, ] = x[i:(i+len-1), 2] 
-    segsDI[i, ] = dirim[i:(i+len-1)]   
-    segsDO[i, ] = dorim[i:(i+len-1)]
-    times[i, ] = i:(i+len-1)   
-  }
-  list(segsX1 = segsX1, segsX2 = segsX2, times=times, dorim=segsDO, dirim =
-      segsDI)
-}
+ sample
+} 
 
 
 
-
-extract.conditions <- function(data){
-  conds <- c()
-  for( i in 1:length(files)){
-    print(i)
-    conds = rbind(conds, cbind( data[[i]]$dirim, data[[i]]$dorim, data[[i]]$time, i) )
-  }
-  colnames(conds) <-  c("dirim", "dorim", "time", "id") 
-
-  as.data.frame(conds)
-
-}
-
-
-
-
-extract.all.segments <- function(len, off = len/2){
-  data <- list()
-  for( i in 1:length(files)){
-    print(i)
-    data[[i]] = extract.segments(i, len, off);
-  }
-  data
-}
-
-
-
-clean.segments <- function(data){
-   for( i in 1:length(data)){
-    print(i)
-    x = data[[i]]
-    n <- nrow(x$segsX1)
-    dx1 = (x$segsX1[1:(n-1), ] - x$segsX1[2:n, ])^2
-    dx2 = (x$segsX2[1:(n-1), ] - x$segsX2[2:n, ])^2
-    d = apply(dx1+dx2, 1, max)
-    ind = which( d < 40 )
-    x$segsX1 = x$segsX1[ind, ]
-    x$segsX2 = x$segsX2[ind, ]
-    x$dirim  = x$dirim[ind, ]
-    x$dorim  = x$dorim[ind, ]
-    x$times  = x$times[ind, ]
-    data[[i]] = x
-  }
- 
-  data
-}
-
-
-
-extract.segments.conditions <- function( data ){
-  conds <- c()
-  for( i in 1:length(files)){
-    print(i)
-    conds = rbind(conds, cbind( rowMeans(data[[i]]$dirim),
-          rowMeans(data[[i]]$dorim), rowMeans( data[[i]]$times ), i) )
-  }
-  colnames(conds) <-  c("dirim", "dorim", "time", "id") 
-
-  as.data.frame(conds)
-}
-
-
-
-
-extract.segment.features.sorted <- function(data, l, off=l/3){
-
-  index = seq(1, length(data$lengths)-l-1, off)
-  n =length(index)
-  fl = matrix( 0, nrow=n, ncol=l)
-  fa = matrix( 0, nrow=n, ncol=l)
-  fc = matrix( 0, nrow=n, ncol=l)
-  
-  fdi = matrix( 0, nrow=n, ncol=1)
-  fdo = matrix( 0, nrow=n, ncol=1)
-  ft = matrix( 0, nrow=n, ncol=1)
-
-  for(k in 1:n ){
-    i = index[k]
-    fl[k,] = sort( data$lengths[ i:(i+l-1) ] , na.last=T)
-    fa[k,] = sort( data$angles[ i:(i+l-1) ], na.last=T)
-    fc[k,] = sort( data$cross[ i:(i+l-1) ], na.last=T)
-
-    fdi[k,1] = mean( data$dirim[ i:(i+l-1) ], na.rm=T)
-    fdo[k,1] = mean( data$dorim[ i:(i+l-1) ], na.rm=T)
-    ft[k,1] = mean( data$time[ i:(i+l-1) ], na.rm=T)
-  }
-
-  features <- list(lengths=fl, angles=fa, cross = fc,seg.length=l, time=ft,
-      id=data$id, dorim=fdo, dirim = fdi)
-
-}
-
-
-extract.all.segment.features.sorted <- function(data, l, off = l/3){
-
-  segs <- c()
-  for( i in 1:length(data)){
-    print(i)
-    seg =  extract.segment.features.sorted( data[[i]], l, off)
-    segs  = rbind(segs, cbind(seg$angles, seg$cross, seg$lengths, seg$time, 
-          seg$dorim, seg$dirim, seg$id ) ) 
-  }
-  colnames(segs) = c(rep("angles", l), rep("cross", l), rep("lengths", l),
-      "time", "dorim", "dirim", "id" ) 
-  segs
-
-}
-
-
-extract.segment.features <- function(data, l, off=l/3){
-
-  index = seq(1, length(data$lengths)-l-1, off)
-  n =length(index)
-  fl = matrix( 0, nrow=n, ncol=l)
-  fa = matrix( 0, nrow=n, ncol=l)
-  fc = matrix( 0, nrow=n, ncol=l)
-  
-  fdi = matrix( 0, nrow=n, ncol=1)
-  fdo = matrix( 0, nrow=n, ncol=1)
-  ft = matrix( 0, nrow=n, ncol=1)
-
-  for(k in 1:n ){
-    i = index[k]
-    fl[k,] =  data$lengths[ i:(i+l-1) ]
-    fa[k,] =  data$angles[ i:(i+l-1) ]
-    fc[k,] =  data$cross[ i:(i+l-1) ]
-
-    fdi[k,1] = mean( data$dirim[ i:(i+l-1) ], na.rm=T)
-    fdo[k,1] = mean( data$dorim[ i:(i+l-1) ], na.rm=T)
-    ft[k,1] = mean( data$time[ i:(i+l-1) ], na.rm=T)
-  }
-
-  features <- list(lengths=fl, angles=fa, cross = fc,seg.length=l, time=ft,
-      id=data$id, dorim=fdo, dirim = fdi)
-
-}
-
-
-extract.all.segment.features <- function(data, l, off = l/3){
-
-  segs <- c()
-  for( i in 1:length(data)){
-    print(i)
-    seg =  extract.segment.features( data[[i]], l, off)
-    segs  = rbind(segs, cbind(seg$angles, seg$cross, seg$lengths, seg$time, 
-          seg$dorim, seg$dirim, seg$id ) ) 
-  }
-  colnames(segs) = c(rep("angles", l), rep("cross", l), rep("lengths", l),
-      "time", "dorim", "dirim", "id" ) 
-  segs
-
-}
-
-
-
-
-
-extract.segment.features.summary <- function(data, l){
-
-  fl = matrix( 0, nrow=length(data$lengths)-l+1, 3)
-  fa = matrix( 0, nrow=length(data$lengths)-l+1, 3)
-  fc = matrix( 0, nrow=length(data$lengths)-l+1, 3)
-  
-  fdi = matrix( 0, nrow=length(data$lengths)-l+1, 1)
-  fdo = matrix( 0, nrow=length(data$lengths)-l+1, 1)
-  ft = matrix( 0, nrow=length(data$lengths)-l+1, 1)
-
-  for(i in 1:nrow(fa) ){
-    fl[i,1] = mean( data$lengths[ i:(i+l-1) ] , na.rm=T)
-    fl[i,2] = median( data$lengths[ i:(i+l-1) ] , na.rm=T)
-    fl[i,3] = stats::sd( data$lengths[ i:(i+l-1) ] , na.rm=T)
-    fl[i,4] = max( data$lengths[ i:(i+l-1) ] , na.rm=T)
-
-    fa[i,1] = mean( data$angles[ i:(i+l-1) ] , na.rm=T)
-    fa[i,2] = median( data$angles[ i:(i+l-1) ] , na.rm=T)
-    fa[i,3] = stats::sd( data$angles[ i:(i+l-1) ] , na.rm=T)
-
-    fc[i,1] = mean( data$cross[ i:(i+l-1) ], na.rm=T)
-    fc[i,2] = median( data$cross[ i:(i+l-1) ], na.rm=T)
-    fc[i,3] = stats::sd( data$cross[ i:(i+l-1) ], na.rm=T )
-
-    fdi[i,1] = mean( data$dirim[ i:(i+l-1) ], na.rm=T)
-    fdo[i,1] = mean( data$dorim[ i:(i+l-1) ], na.rm=T)
-    ft[i,1] = mean( data$time[ i:(i+l-1) ], na.rm=T)
-  }
-
-  features <- list(lengths=fl, angles=fa, cross = fc,seg.length=l, time=ft,
-      id=data$id, dorim=fdo, dirim = fdi)
-
-}
-
-
-extract.all.segment.features.summary <- function(data, l){
-
-  segs <- c()
-  for( i in 1:length(data)){
-    print(i)
-    seg =  extract.segment.features( data[[i]], l)
-    segs  = rbind(segs, cbind(seg$angles, seg$cross, seg$lengths, seg$time, 
-          seg$dorim, seg$dirim, seg$id ) ) 
-  }
-  colnames(segs) = c(rep("angles", 3), rep("cross", 3), rep("lengths", 4),
-      "time", "dorim", "dirim", "id" ) 
-  segs
-
-}
 
 

@@ -111,7 +111,7 @@ hyperboloid.distance <- function(X, k){
    D[,i] = X %*% M %*% X[i,]
  }
 
- browser()
+ D[D<1] = 1
  D =  acosh(D)/sqrt(k)
 
 }
@@ -124,7 +124,7 @@ hyperboloid.distance <- function(X, k){
 generate.hyperboloid.data <-function(m, n, s=0.1){
  X = matrix(runif(m*n)-0.5, nrow=m, ncol=n)*s
  
- X= cbind( 1+rowSums(X^2), X )
+ X= cbind( sqrt(1+rowSums(X^2)), X )
  
- D =  hyperboloid.distance(X)
+ D =  hyperboloid.distance(X, 1)
 }

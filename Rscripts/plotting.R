@@ -64,17 +64,17 @@ plot.cluster <- function(K, S){
   abline(v=5400, col="gold")
   abline(v=10800, col="gold")
   t = c()
-  for(i in 1:length(S$conds)){
-    a = S$conds[[i]]
-    lines(x =range(a[,3]), y=c(K[i], K[i]) )
-  }
+#for(i in 1:length(S$conds)){
+#   a = S$conds[[i]]
+#   lines(x =range(a[,3]), y=c(K[i], K[i]) )
+#  }
 
 
   K.max = max(K)
   for(a in S$conds){
     y = rep(K.max/2, nrow(a))
-    y[a[,1] >= -10 ] = 1.5
-    y[a[,2] < 20 ] = K.max-0.5
+    y[a[,1] >= -20 ] = 1.5
+    y[a[,2] < 30 ] = K.max-0.5
     lines(a[,3], y, col="#00000020")
   }
 
@@ -169,6 +169,38 @@ plot.clusters.distibutions <- function(K, S){
 }
 
 
+plot.clusters.sample.segs <- function(K, S, nSegs=5){   
+
+  library(MASS)
+
+  n = ceiling(sqrt(max(K)))
+  m =  ceiling(max(K)/n)
+  layout( matrix(1:(m*n),m,n ))
+  
+  cols = unlist( lapply(brewer.pal("Dark2", n=8), paste, "90", sep="") )
+  
+  dK = vector("list", max(K))
+
+  for( i in 1:length(S$segs) ){
+    x = scale(S$conds[[i]][,4:5], center=T, scale=F)
+    dK[[ K[i] ]]  = rbind( dK[[ K[i] ]], x )
+  }
+
+  sl = nrow(S$segs[[1]])
+  for( i in 1:length(dK) ){
+    l = nrow(dK[[i]]) / sl
+    ind = floor(runif(nSegs)*l)
+    plot( dK[[i]], col="#00000000", xlab="", ylab="", type="l", asp=1 )
+    for(k in ind){
+      q = k*sl+1
+      lines( dK[[i]][q:(q+sl-1), ], col=cols[i] )
+    }
+  }
+
+}
+
+
+
 plot.curvature.length <- function(features){
 
   index1 = features$time < 5400
@@ -224,3 +256,61 @@ plot.radial.density <- function(features){
   
 
 }
+
+
+
+plot.odor <- function(X, C, type="p"){
+ cols = rep("#000000", nrow(C))
+ ramp = colorRamp(c("red", "blue"))
+ t = C$timeToOdor/max(C$timeToOdor)
+ cols[t >= 0] =rgb( ramp(t[t>=0]^(1/2) )/255 ) 
+ 
+ ramp2 = colorRamp(c("red", "black"))
+ ind = C$timeToOdor > -60 & C$timeToOdor <0
+ t = - C$timeToOdor[ind]
+ t= t/max(t);
+
+ 
+ plot(X, col=cols, pch=19, type=type)
+}
+
+
+
+plot3d.odor <- function(X, C, type="s", alpha=0.3){
+ library(rgl)
+ cols = rep("#000000", nrow(C))
+ ramp = colorRamp(c("red", "darkblue"))
+ t = C$timeToOdor/max(C$timeToOdor)
+ cols[t >= 0] =rgb( ramp(t[t>=0]^(1/2) )/255 ) 
+ 
+ ramp2 = colorRamp(c("red", "black"))
+ ind = C$timeToOdor > -60 & C$timeToOdor <0
+ t = - C$timeToOdor[ind]
+ t= t/max(t);
+ 
+ cols[ind] = rgb(ramp2(t)/255)
+
+
+ plot3d(X, col=cols, type=type, r=1, asp="iso", alpha=alpha, lwd=2)
+
+}
+
+
+
+plot.location <- function(X, C){
+ cols = c("black", "lightblue", "orange")
+ plot(X, col=cols[C$maxPos], pch=19)
+}
+
+
+
+
+plot3d.location <- function(X, C){
+ library(rgl)
+ cols = c("black", "lightblue", "orange")
+ plot3d(X, col=cols[C$maxPos], pch=19, type="s", r=0.025, asp="iso")
+
+}
+
+
+

@@ -8,65 +8,151 @@
 
 
 
-conditional.procrustes <- function(S){
-  library(shapes)
 
-  C = as.data.frame( S$conditions )
+extract.procrustes.block.from.segments <- function(Slist){
+ 
+  Pall = c()
+  for(S in Slist){
+   P  = extract.procrustes.block.from.segment(S)
+   Pall = abind::abind(Pall, P, along=3)
+  }
 
-  ind = which(C$odorOn == 1 & C$odorOff == 0 & C$innerRim==1 & C$middle==0 &
-      C$outerRim ==0 & C$id == -1 & S$nSamples > 0)
-  X <- extract.procrustes.segments.block(S$samples[ind])
-  gpa <- procGPA(X, scale=F, reflect=T, proc.output=T, distances=F, pcaoutput=F)
-  save(gpa, ind, file="segs-20-gpa-odor-inside.Rdata")
+  Pall
+}
 
-  ind = which( C$middle==1 & C$innerRim==0 & C$outerRim==0 & C$id==-1, S$nSamples > 0)
-  X <- extract.procrustes.segments.block(S$samples[ind])
-  gpa <- procGPA(X, scale=F, reflect=T, proc.output=T, distances=F, pcaoutput=F)
-  save(gpa, ind, file="segs-20-gpa-middle.Rdata")
 
-  ind = which( C$middle==0 & C$innerRim==0 & C$outerRim==1 & C$id==-1 & S$nSamples > 0)
-  X <- extract.procrustes.segments.block(S$samples[ind])
-  gpa <- procGPA(X, scale=F, reflect=T, proc.output=T, distances=F, pcaoutput=F)
-  save(gpa, ind, file="segs-20-gpa-atOuterRim.Rdata")
 
+extract.procrustes.block.from.segment <- function(S){
+  library(abind)
+  X = abind::abind(S$x, S$y, along=3)
+  aperm(X, c(2,3,1) ) 
 }
 
 
 
 
+procrustes.analysis <- function(S, scale=F){
+  P = extract.procrustes.block.from.segment(S)
+  procGPA(P, scale=scale, pcaoutput=T, proc.output=T, distances=F)
+}
 
-extract.procrustes.segments.block <- function(data){
-  library(shapes)
-  library(abind)
+
+
+
+procrustes.analysis.joint <- function(Slist){
+  P = extract.procrustes.block.from.segments(Slist)
+  procGPA(P, scale=F, pcaoutput=T, proc.output=T)
+}
+
+
+
+
+#do procrustes per individual in list
+procrustes.analysis.individual <- function(Slist){
+  pga <- list()
+  for(i in 1:length(Slist) ){
+    pga[[i]] = procrustes.analysis(Slist[[i]])
+  }
+  pga
+}
+
+
+
+
+procrustes.align.individual <- function(pgas){
+
+  P <- c()
+  for( i in 1:length(pgas) ){
+    P = abind::abind( P, pgas[[i]]$pcar, along=3) 
+
+  }
+
+
+  pga <- procGPA(P, scale=T, reflect=T, proc.output=T )
   
-  l = ncol(data[[1]])
-  s = l/2
-  segs <- c()
-  for(seg in data){
-     x = abind::abind(seg[,1:s], along=1)
-     y = abind::abind(seg[,(s+1):l], along=1)
-     z = aperm( abind::abind(x, y, along=3), c(2,3,1) )
-     segs = abind::abind(segs, z, along=3)
+  mean <- matrix(0, nrow=nrow(pgas[[1]]$mshape), ncol=ncol(pgas[[1]]$mshape) )
+  for( i in 1:length(pgas) ){
+    mean = mean+pgas[[i]]$mshape
   }
-  segs
+  mean = mean/length( pgas )
+
+  X = list()
+  for( i in 1:length(pgas) ){
+    X[[i]] = t(pga$rotated[,,i]) %*% pgas[[i]]$pcar %*% t(pgas[[i]]$rawscores) 
+  }
+
+  list(gpa=pga, mshape= mean, X=X )
+  
 }
 
 
 
 
 
-extract.procrustes.segments <- function(data){
-  library(shapes)
-  library(abind)
-  k <- length( data[[1]]$segsX1 )
-  segs <- c()
-  for(seg in data){
-     x = abind::abind(seg$segsX1, along=1)
-     y = abind::abind(seg$segsX2, along=1)
-     z = aperm( abind::abind(x, y, along=3), c(2,3,1) ) 
-     segs = abind::abind(segs, z, along=3)
+
+
+
+
+procrustes.plot <- function(gpa, pc=1, factor=1){
+
+
+  d = dim( gpa$mshape )
+  dir = factor* gpa$pcasd[pc] *matrix(gpa$pcar[,pc] , nrow=d[1])
+  
+  pc.segment.plot(gpa$mshape, dir, factor, pc)
+
+}
+
+
+
+pc.segment.plot <- function(mean, dir, factor, pc){
+
+  layout( matrix(1:3, nrow=1) )
+  
+  n = nrow(mean)
+  xlim = range(mean[,1]) + range(dir[,1])
+  ylim = range(mean[,2]) + range(dir[,2])
+  plot(mean + dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
+      ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
+  points( (mean+dir)[2:n, ], pch=19, col="#00000090",cex=2)
+  title(sprintf("Mean + %d sd * PC %d", factor, pc), cex.main=2)
+
+  plot(mean, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
+      ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
+  points((mean)[2:n, ], pch=19, col="#00000090",cex=2)
+  title("Mean", cex.main=2)
+  
+  plot(mean - dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
+      ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
+  points((mean - dir)[2:n, ], pch=19, col="#00000090",cex=2)
+  title(sprintf("Mean - %d sd * PC %d", factor, pc), cex.main=2)
+  
+}
+
+
+
+
+
+#does not make sense to do the analysis this way...
+extract.invariant.segments <- function(Slist){
+  Si <- c()
+  for( i in 1:length(Slist) ){
+    Si <- rbind(Si, cbind( t( apply( Slist[[i]]$rx, 1, cumsum)), 
+                           t( apply( Slist[[i]]$ry, 1, cumsum))  ) )
   }
-  segs
+
+  Si
+}
+
+
+invariant.segments.pca.plot <- function(pca, dim=2, pc=1, factor=1){
+
+  mean = matrix(pca$center, ncol=dim)
+#mean = apply(mean, 2, cumsum)
+  dir = factor*pca$sdev[pc] * matrix(pca$rotation[,pc], ncol=dim)
+# dir = apply(dir, 2, cumsum)
+
+  pc.segment.plot(mean, dir, sprintf("Mean + %d sd * PC %d", factor, pc))
 }
 
 

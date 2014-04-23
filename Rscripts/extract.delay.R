@@ -49,11 +49,11 @@ tp = cbind(tp,  X$lengths[j:(n-k+j)], X$curvatureMean[j:(n-k+j)] )
 
 
 
-extract.all.markov.transitions <- function(data, k){
+extract.all.delay <- function(data, k){
   M = list()
   for( i in 1:length(data) ){
-    tp = extract.markov.transitions(data[[i]], k)
-    M[[i]] = list(tp = tp, conds= conds)
+    d = extract.delay(data[[i]], k)
+    M[[i]] = d
   }
 
   M

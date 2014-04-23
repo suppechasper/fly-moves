@@ -7,7 +7,7 @@
 
 
 
-#Pairwise Wassertsine distance for list of matrices in Xin
+#Pairwise Wassertien distance for list of matrices in Xin
 pairwise.transport <- function(Xin, eps=-1, scale=-1){
   library(mop)
   library(pdist)
@@ -22,13 +22,13 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1){
     if(!is.null(nr)){
       if( nr > 0){
 
-        gmra <- c(gmra, multiscale.transport.create.ipca(X=Xin[[i]], d=1,
-            eps=eps, t=0.9) )
+        gmra <- c(gmra, multiscale.transport.create.ipca(X=Xin[[i]], d=2,
+            eps=eps, t=-1, split=1, stop=6) )
         indices = c(indices, i)
       }
     }
   }
-  
+ 
   
   
   
@@ -38,18 +38,19 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1){
     for(j in (i+1):length(gmra)){
       trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j],
           p=2, rFactor=1, sType=0, scale1=scale, scale2=scale, stpPct=-1,
-          oType=26, propFactor=0,  nRefinementIterations = 1 )
+          oType=26, propFactor=0,  nRefinementIterations = 1)
+        
      
       dist[i, j] = trp$cost[length(trp$cost)]
       dist[j, i] = dist[i, j]
+      print(paste(i, j))
 #save(trp, file=sprintf("%s-%d-%d.Rdata", prefix, i, j))
     }
     gc()
-        print(i)
   }
 
   
-    for(i in indices){
+    for(i in gmra){
       multiscale.transport.delete.ipca(i)
     }
 
@@ -68,7 +69,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1){
             dist[j, i] = dist[i, j]
 #save(trp, file=sprintf("%s-%d-%d.Rdata", prefix, i, j))
         }
-        gc()
+        magc()
         print(i)
       }
 
@@ -305,4 +306,34 @@ transport.cluster <- function(X, pCut = 0.01, nPerms=200, eps=0, scale=0){
   }
 
   list(clusters=clusters, cIds = cIds)
+}
+
+
+
+
+
+
+pairwise.transport.time <- function(tp, scale, eps){
+
+  
+  X = list();
+
+  index = 1;
+  for(i in 1:length(tp)){
+    index1 = tp[[i]]$conds$time < 5400
+    index2 = tp[[i]]$conds$time > 5400 & tp[[i]]$conds$time < 10800
+    index3 = tp[[i]]$conds$time > 10800
+
+    X[[index]] = tp[[i]]$tp[index1, ]
+    X[[index+1]] = tp[[i]]$tp[index2, ]
+    X[[index+2]] = tp[[i]]$tp[index3, ]
+
+    index = index+3;
+  }
+
+
+  trp = pairwise.transport(X, scale=scale, eps=eps)
+  res = list(X = X, trp =trp)
+
+  res
 }
