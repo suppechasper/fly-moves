@@ -6,6 +6,48 @@
 #peak fluctation is 0.15 pixels, sd 0.09 pixels
 
 
+procrustes.extract.rawscores.joint <-function(gpa, Slist){
+  
+  Z = list()
+  index = 1
+  for(i in 1:length(Slist)){
+    n = nrow(Slist[[i]]$C)
+    Z[[i]] = gpa$rawscores[index:(index+n-1), ]
+    index = index + n
+  }
+
+  Z
+} 
+
+procrustes.extract.tangent.joint <-function(gpa, Slist){
+  
+  Z = list()
+  index = 1
+  for(i in 1:length(Slist)){
+    n = nrow(Slist[[i]]$C)
+    Z[[i]] = t(gpa$tan[,index:(index+n-1)])
+    index = index + n
+  }
+
+  Z
+} 
+
+procrustes.extract.rotated.joint <-function(gpa, Slist){
+  
+  Z = list()
+  index = 1
+  for(i in 1:length(Slist)){
+    n = nrow(Slist[[i]]$C)
+    Z[[i]] = gpa$rotated[,,index:(index+n-1)]
+    d = dim(Z[[i]])
+    dim(Z[[i]]) = c(d[1]*d[2], d[3])
+    Z[[i]] = t(Z[[i]])
+
+    index = index + n
+  }
+
+  Z
+}
 
 
 
@@ -45,6 +87,15 @@ procrustes.analysis.joint <- function(Slist){
 }
 
 
+
+procrustes.analysis.transport.plan <- function(trp){
+  n = length(trp$cost)
+  X = trp$from[[n]][trp$map[[n]][,1], ]  - trp$to[[n]][trp$map[[n]][,2], ]
+#X = sweep(X, 1, trp$map[[n]][,3], "*")
+  prcomp(X)  
+
+   
+}
 
 
 #do procrustes per individual in list
@@ -103,7 +154,13 @@ procrustes.plot <- function(gpa, pc=1, factor=1){
 
 }
 
+pc.segment.plot.vectorize <- function(pca, dim, factor, pc){
+  mean = matrix(pca$center , nrow=dim)
 
+  dir = factor* pca$sdev[pc] *matrix(pca$rotation[,pc] , nrow=dim)
+
+  pc.segment.plot(mean, dir, factor, pc)
+}
 
 pc.segment.plot <- function(mean, dir, factor, pc){
 

@@ -330,12 +330,12 @@ extract.segments  <- function(X, k){
       start3 = start2+600
       for( k in 1:nrow(C) ){
         C[k, 1] = sum( S$conds[[k]]$time < start1 )
-          C[k, 2] = sum( time[k, ] > start1 & S$conds[[k]]$time < start2 )
-          C[k, 3] = sum( time[k, ] > start2 & S$conds[[k]]$time < start3 )
-          C[k, 4] = sum( time[k, ] > start3 & S$conds[[k]]$time < 10800 )
-          C[k, 5] = sum( time[k,] > 10800 )
+          C[k, 2] = sum( time[k, ] > start1 & time[k, ]  < start2 )
+          C[k, 3] = sum( time[k, ] > start2 & time[k, ]  < start3 )
+          C[k, 4] = sum( time[k, ] > start3 & time[k, ]  < 10800 )
+          C[k, 5] = sum( time[k, ] > 10800 )
           C[k, 6] = which.max(C[k, 1:5])
-          C[k, 7] = mean(time[k,]) - start1
+          C[k, 7] = mean(time[k, ]) - start1
 
           C[k, 8] =  sum(dorim[k,] < 20)
           C[k, 9] = sum( dorim[k,] >= 20 & S$conds[[k]]$dirim < -5)
@@ -364,6 +364,16 @@ extract.sample.segments <- function(S, len, off=len/2){
 } 
 
 
-
+extract.sample <- function(S, len, off=len/2){
+  d = dim(S$lengths)
+  index = 1
+  sample = list()
+  for( i in seq(1,(d[1]-len-1), off) ){
+    sample[[index]] = S[i:(i+len-1), ]
+    index = index +1  
+  }
+  
+ sample
+} 
 
 
