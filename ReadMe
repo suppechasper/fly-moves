@@ -1,11 +1,16 @@
-The R scripts requires several libraires to be installed:
-MASS, RColorBrewer, cluster, hmm.discnp, depmix, shapes
+R scripts for analysing fly movments.
+The R scripts requires several packages to be installed.
+For running the example.procrustes.analysis.R script requires
+abind, shapes, circular
 
-And for transport stuff my package "mop" which also requires the CPLEX
-optimization library from IBM.
+For some of the other analyses the following packages can be required
+MASS, RColorBrewer, cluster, hmm.discnp, depmix
 
-Not well documented yet, some of it deprecated, i.e. expects featurs 
-in different format than they are now extracted. Hard to figure what 
-inputs are expected to the different functions ....
+For optimal transport the R package "mop" which is not currently available from
+CRAN. The package "mop" also requires the CPLEX optimization library from IBM to
+be installed on the system.
 
+The file  example.procrustes.analysis.R  contains an example analysis for path
+segments.
 
+Further examples will be added for other types of anlayses. 

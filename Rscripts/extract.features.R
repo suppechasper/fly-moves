@@ -1,10 +1,19 @@
+#----- Extract data for analysis from raw data----
 
-##
+
+#---- Experimental setup information ----
 #frame odor on:   5400
 #frame odor off: 10801
 #fly dimensions 25 x 12 pixels
 #instantaneous velocity < 3 pixels /s , values abouve 4 p/s probably errorenous
 #peak fluctation is 0.15 pixels, sd 0.09 pixels
+
+
+#Set of files from which data is extracted
+
+#Set path to were files are located, if script is run in folder were data is
+#located the current setting will work.
+path = "./"
 
 
 files = c(
@@ -114,10 +123,10 @@ outerRimFiles <- c(
 
 
 
-#read file number index and extract features
+#read file number index in above files list and extract features
 extract.features <- function(index, lT=6, rm.na=T, std=0){
 
-  x <- read.table(files[index], sep=",", header=T)
+  x <- read.table(sprintf("%s%s", path, files[index]), sep=",", header=T)
 
 
   x = x + matrix(rnorm(nrow(x)*ncol(x), sd=std), ncol = ncol(x))
@@ -258,7 +267,7 @@ extract.all.features.expected <- function(lT=6, rm.na=T, nRuns=10, std=0.06){
 #get rim data for file i by circle fitting
 get.inner.rim <- function(i){
   library(circular)
-  x <- read.table(rimFiles[i], sep=",", header=F)
+  x <- read.table(sprintf("%s%s", path, rimFiles[i]), sep=",", header=F)
   
   x <- x[1:(nrow(x)-1), ]
   circ = lsfit.circle(x)
@@ -273,7 +282,7 @@ get.inner.rim <- function(i){
 get.outer.rim <- function(i){
   library(circular)
 
-  x <- read.table(outerRimFiles[i], sep=",", header=F)
+  x <- read.table(sprintf("%s%s", path, outerRimFiles[i]), sep=",", header=F)
   
   x <- x[1:(nrow(x)-1), ]
   circ = lsfit.circle(x)
@@ -286,19 +295,21 @@ get.outer.rim <- function(i){
 
 
 
+#extract segments of length k from all features (read from the data with above
+# methods)
 extract.all.segments <- function(features, k){
   Slist = list()
   
   for(i in 1:length(features)){
     Slist[[i]] = extract.segments(features[[i]], k) 
-     print(i)
+    print(i)
   }
 
   Slist
 }
 
 
-
+#extract segements of length k from a single feature set X 
 extract.segments  <- function(X, k){    
    n = length( X$lengths )
      lengths=c()
@@ -329,7 +340,7 @@ extract.segments  <- function(X, k){
       start2 = start1+300
       start3 = start2+600
       for( k in 1:nrow(C) ){
-        C[k, 1] = sum( S$conds[[k]]$time < start1 )
+        C[k, 1] = sum( X$conds[[k]]$time < start1 )
           C[k, 2] = sum( time[k, ] > start1 & time[k, ]  < start2 )
           C[k, 3] = sum( time[k, ] > start2 & time[k, ]  < start3 )
           C[k, 4] = sum( time[k, ] > start3 & time[k, ]  < 10800 )
@@ -338,7 +349,7 @@ extract.segments  <- function(X, k){
           C[k, 7] = mean(time[k, ]) - start1
 
           C[k, 8] =  sum(dorim[k,] < 20)
-          C[k, 9] = sum( dorim[k,] >= 20 & S$conds[[k]]$dirim < -5)
+          C[k, 9] = sum( dorim[k,] >= 20 & X$conds[[k]]$dirim < -5)
           C[k, 10] = sum( dirim[k,] > -5 )
           C[k, 11] = which.max(C[k, 8:10])
       }
@@ -377,15 +388,50 @@ extract.sample <- function(S, len, off=len/2){
 } 
 
 
+
+#given the data X with n rows and conditions C (i.e. the matrix C from
+#extract.features) for each row extract submatrices condition on odor events
 extract.condition.odor <- function(X, C){
   Xbefore = X[C$maxOdor == 1, ]
-  Xduring1 = X[C$maxOdor == 2, ]
-  Xduring2 = X[C$maxOdor == 3, ]
-  Xduring3 = X[C$maxOdor == 4, ]
+  nb = nrow(Xbefore)
+  nbs = nb/2
+  
+  Xduring = X[C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4, ]
+  nd = nrow(Xduring)
+  nds = nd/2
+
   Xafter = X[C$maxOdor == 5, ]
+  na = nrow(Xafter)
+  nas = na/2
 
-  list( Xbefore=Xbefore, Xduring1 = Xduring1, Xduring2 = Xduring2, Xduring3 =
-      Xduring3, Xafter=Xafter)
+  list( Xbefore1 = Xbefore[1:nbs, ], Xbefore2 = Xbefore[(nbs+1):nb, ],
+        Xduring1 = Xduring[1:nds, ], Xduring2 = Xduring[(nds+1):nd, ],
+        Xafter1 = Xafter[1:nas, ], Xafter2 = Xafter[(nas+1):na, ] )
 
+}
+
+
+extract.condition.odor.all <- function(Xlist, Slist){
+
+  Xbefore1 = c()
+  Xbefore2 = c()
+  Xduring1 = c()
+  Xduring2 = c()
+  Xafter1 = c()
+  Xafter2 = c()
+
+  for(i in 1:length(Xlist) ){
+    res = extract.condition.odor( Xlist[[i]], Slist[[i]]$C )
+    Xbefore1 = rbind(Xbefore1, res$Xbefore1)
+    Xbefore2 = rbind(Xbefore2, res$Xbefore2)
+    Xduring1 = rbind(Xduring1, res$Xduring1)
+    Xduring2 = rbind(Xduring2, res$Xduring2)
+    Xafter1  = rbind(Xafter1, res$Xafter1)
+    Xafter2  = rbind(Xafter2, res$Xafter2)
+  }
+
+  list(Xbefore1 = Xbefore1, Xbefore2 = Xbefore2, 
+       Xduring1 = Xduring1, Xduring2 = Xduring2, 
+       Xafter1 = Xafter1, Xafter2 = Xafter2)
 
 }

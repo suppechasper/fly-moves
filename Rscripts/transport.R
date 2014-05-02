@@ -1,10 +1,4 @@
-##
-#frame odor on:   5400
-#frame odor off: 10801
-#fly dimensions 25 x 12 pixels
-#instantaneous velocity < 3 pixels /s , values abouve 4 p/s probably errorenous
-#peak fluctation is 0.15 pixels, sd 0.09 pixels
-
+#--- Pairwise optimal transport ---#
 
 
 #Pairwise Wassertien distance for list of matrices in Xin

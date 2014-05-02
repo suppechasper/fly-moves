@@ -1,11 +1,58 @@
-##
-#frame odor on:   5400
-#frame odor off: 10801
-#fly dimensions 25 x 12 pixels
-#instantaneous velocity < 3 pixels /s , values abouve 4 p/s probably errorenous
-#peak fluctation is 0.15 pixels, sd 0.09 pixels
+#---- Procrustes analysis of segments
 
 
+#do procrustes analysis on the segments in S
+procrustes.analysis <- function(S, scale=FALSE){
+  library(shapes)
+  P = extract.procrustes.block.from.segment(S)
+  procGPA(P, scale=scale, pcaoutput=TRUE, proc.output=TRUE, distances=FALSE)
+}
+
+
+
+#do joint procrustes analysis on the list of segments in Slist
+procrustes.analysis.joint <- function(Slist){
+  library(shapes)
+  P = extract.procrustes.block.from.segments(Slist)
+  procGPA(P, scale=FALSE, pcaoutput=TRUE, proc.output=TRUE, distances=FALSE)
+}
+
+
+#do procrustes per individual in list
+procrustes.analysis.individual <- function(Slist){
+  library(shapes)
+  pga <- list()
+  for(i in 1:length(Slist) ){
+    pga[[i]] = procrustes.analysis(Slist[[i]])
+  }
+  pga
+}
+
+
+#given a list fo segments build a the data structure for jointly doing a
+#a procrustes analysis on all segments
+extract.procrustes.block.from.segments <- function(Slist){
+  library(abind)
+  Pall = c()
+  for(S in Slist){
+   P  = extract.procrustes.block.from.segment(S)
+   Pall = abind::abind(Pall, P, along=3)
+  }
+
+  Pall
+}
+
+
+#extract the data structure for procrustes analysis from the sgemenets in S
+extract.procrustes.block.from.segment <- function(S){
+  library(abind)
+  X = abind::abind(S$x, S$y, along=3)
+  aperm(X, c(2,3,1) ) 
+}
+
+
+
+#Extract per subject gpa results
 procrustes.extract.rawscores.joint <-function(gpa, Slist){
   
   Z = list()
@@ -51,108 +98,12 @@ procrustes.extract.rotated.joint <-function(gpa, Slist){
 
 
 
-extract.procrustes.block.from.segments <- function(Slist){
- 
-  Pall = c()
-  for(S in Slist){
-   P  = extract.procrustes.block.from.segment(S)
-   Pall = abind::abind(Pall, P, along=3)
-  }
-
-  Pall
-}
-
-
-
-extract.procrustes.block.from.segment <- function(S){
-  library(abind)
-  X = abind::abind(S$x, S$y, along=3)
-  aperm(X, c(2,3,1) ) 
-}
-
-
-
-
-procrustes.analysis <- function(S, scale=F){
-  P = extract.procrustes.block.from.segment(S)
-  procGPA(P, scale=scale, pcaoutput=T, proc.output=T, distances=F)
-}
-
-
-
-
-procrustes.analysis.joint <- function(Slist){
-  P = extract.procrustes.block.from.segments(Slist)
-  procGPA(P, scale=F, pcaoutput=T, proc.output=T)
-}
-
-
-procrustes.difference.transport.plan <- function(trp){
-  n = length(trp$cost)
-  X = trp$from[[n]][trp$map[[n]][,1], ]  - trp$to[[n]][trp$map[[n]][,2], ]
-#Xw = sweep(X, 1, trp$map[[n]][,3], "*")
-
-  X
-   
-}
-
-
-procrustes.analysis.transport.plan <- function(trp){
-  n = length(trp$cost)
-  X = trp$from[[n]][trp$map[[n]][,1], ]  - trp$to[[n]][trp$map[[n]][,2], ]
-#X = sweep(X, 1, trp$map[[n]][,3], "*")
-  prcomp(X)  
-
-   
-}
-
-
-#do procrustes per individual in list
-procrustes.analysis.individual <- function(Slist){
-  pga <- list()
-  for(i in 1:length(Slist) ){
-    pga[[i]] = procrustes.analysis(Slist[[i]])
-  }
-  pga
-}
-
-
-
-
-procrustes.align.individual <- function(pgas){
-
-  P <- c()
-  for( i in 1:length(pgas) ){
-    P = abind::abind( P, pgas[[i]]$pcar, along=3) 
-
-  }
-
-
-  pga <- procGPA(P, scale=T, reflect=T, proc.output=T )
-  
-  mean <- matrix(0, nrow=nrow(pgas[[1]]$mshape), ncol=ncol(pgas[[1]]$mshape) )
-  for( i in 1:length(pgas) ){
-    mean = mean+pgas[[i]]$mshape
-  }
-  mean = mean/length( pgas )
-
-  X = list()
-  for( i in 1:length(pgas) ){
-    X[[i]] = t(pga$rotated[,,i]) %*% pgas[[i]]$pcar %*% t(pgas[[i]]$rawscores) 
-  }
-
-  list(gpa=pga, mshape= mean, X=X )
-  
-}
 
 
 
 
 
-
-
-
-
+#plot principal segments from procrustes analysis
 procrustes.plot <- function(gpa, pc=1, factor=1){
 
 
@@ -194,6 +145,78 @@ pc.segment.plot <- function(mean, dir, factor, pc){
   title(sprintf("Mean - %d sd * PC %d", factor, pc), cex.main=2)
   
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#--- experimental ---
+
+
+procrustes.difference.transport.plan <- function(trp){
+  n = length(trp$cost)
+  X = trp$from[[n]][trp$map[[n]][,1], ]  - trp$to[[n]][trp$map[[n]][,2], ]
+#Xw = sweep(X, 1, trp$map[[n]][,3], "*")
+
+  X
+   
+}
+
+
+procrustes.analysis.transport.plan <- function(trp){
+  n = length(trp$cost)
+  X = trp$from[[n]][trp$map[[n]][,1], ]  - trp$to[[n]][trp$map[[n]][,2], ]
+#X = sweep(X, 1, trp$map[[n]][,3], "*")
+  prcomp(X)  
+
+   
+}
+
+
+
+procrustes.align.individual <- function(pgas){
+
+  P <- c()
+  for( i in 1:length(pgas) ){
+    P = abind::abind( P, pgas[[i]]$pcar, along=3) 
+
+  }
+
+
+  pga <- procGPA(P, scale=T, reflect=T, proc.output=T )
+  
+  mean <- matrix(0, nrow=nrow(pgas[[1]]$mshape), ncol=ncol(pgas[[1]]$mshape) )
+  for( i in 1:length(pgas) ){
+    mean = mean+pgas[[i]]$mshape
+  }
+  mean = mean/length( pgas )
+
+  X = list()
+  for( i in 1:length(pgas) ){
+    X[[i]] = t(pga$rotated[,,i]) %*% pgas[[i]]$pcar %*% t(pgas[[i]]$rawscores) 
+  }
+
+  list(gpa=pga, mshape= mean, X=X )
+  
+}
+
+
+
+
+
+
+
 
 
 

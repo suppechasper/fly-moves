@@ -1,5 +1,6 @@
 
-
+#compute the stress for a 2 dimensional empedding for each distance matrix in
+#the list of distance matrices in dists
 complexity.stress.mds <- function(dists, dim=2){
 
   library(MASS)
@@ -17,6 +18,8 @@ complexity.stress.mds <- function(dists, dim=2){
 
 
 
+#compute the clustering for each distance matrix in the list of distance
+#matrices in dists using first a mds embedding and the kmeans on the mebedding
 complexity.clus.gap <- function(dists, K.max = 20, dim=3){
   
   library(MASS)
@@ -35,7 +38,7 @@ complexity.clus.gap <- function(dists, K.max = 20, dim=3){
 
 
 
-
+#get the number of clusters for each of the clustering gap results in cgap
 complexity.clus.gap.get.clusters <- function(cgaps, factor=2, method="firstSEmax"){
 
   nc = c()
@@ -50,6 +53,8 @@ complexity.clus.gap.get.clusters <- function(cgaps, factor=2, method="firstSEmax
 
 
 
+
+#-- experimental ----
 
 complexity.hclust.reconstruction.error <- function(dists, K.max=100,
     method="ward"){
