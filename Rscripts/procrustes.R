@@ -87,6 +87,15 @@ procrustes.analysis.joint <- function(Slist){
 }
 
 
+procrustes.difference.transport.plan <- function(trp){
+  n = length(trp$cost)
+  X = trp$from[[n]][trp$map[[n]][,1], ]  - trp$to[[n]][trp$map[[n]][,2], ]
+#Xw = sweep(X, 1, trp$map[[n]][,3], "*")
+
+  X
+   
+}
+
 
 procrustes.analysis.transport.plan <- function(trp){
   n = length(trp$cost)

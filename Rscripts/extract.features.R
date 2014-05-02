@@ -377,3 +377,15 @@ extract.sample <- function(S, len, off=len/2){
 } 
 
 
+extract.condition.odor <- function(X, C){
+  Xbefore = X[C$maxOdor == 1, ]
+  Xduring1 = X[C$maxOdor == 2, ]
+  Xduring2 = X[C$maxOdor == 3, ]
+  Xduring3 = X[C$maxOdor == 4, ]
+  Xafter = X[C$maxOdor == 5, ]
+
+  list( Xbefore=Xbefore, Xduring1 = Xduring1, Xduring2 = Xduring2, Xduring3 =
+      Xduring3, Xafter=Xafter)
+
+
+}
