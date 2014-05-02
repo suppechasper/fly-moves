@@ -96,7 +96,19 @@ procrustes.extract.rotated.joint <-function(gpa, Slist){
   Z
 }
 
+procrustes.extract.stdscores.joint <-function(gpa, Slist){  
+  
+  Z = list()
+  index = 1
+  for(i in 1:length(Slist)){
+    n = nrow(Slist[[i]]$C)
+    Z[[i]] = gpa$stdscores[index:(index+n-1), ]
+    index = index + n
+  }
 
+  Z
+
+}
 
 
 
