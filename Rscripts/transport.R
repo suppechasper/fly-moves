@@ -2,7 +2,7 @@
 
 
 #Pairwise Wassertien distance for list of matrices in Xin
-pairwise.transport <- function(Xin, eps=-1, scale=-1){
+pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2){
   library(mop)
   library(pdist)
 
@@ -16,7 +16,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1){
     if(!is.null(nr)){
       if( nr > 0){
 
-        gmra <- c(gmra, multiscale.transport.create.ipca(X=Xin[[i]], d=2,
+        gmra <- c(gmra, multiscale.transport.create.ipca(X=Xin[[i]], d=d,
             eps=eps, t=-1, split=1, stop=6) )
         indices = c(indices, i)
       }
@@ -30,9 +30,8 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1){
 
   for(i in 1:(length(gmra)-1)){
     for(j in (i+1):length(gmra)){
-      trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j],
-          p=2, rFactor=1, sType=0, scale1=scale, scale2=scale, stpPct=-1,
-          oType=26, propFactor=0,  nRefinementIterations = 1)
+      trp = multiscale.transport.duality.id(gmra1=gmra[i], gmra2 = gmra[j], p=2,
+          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, factor=200)
         
      
       dist[i, j] = trp$cost[length(trp$cost)]
@@ -45,7 +44,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1){
 
   
     for(i in gmra){
-      multiscale.transport.delete.ipca(i)
+      multiscale.transport.delete(i)
     }
 
   res = list(D = dist)

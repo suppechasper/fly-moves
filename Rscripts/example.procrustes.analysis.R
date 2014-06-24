@@ -7,13 +7,13 @@ source("delay.reconstruction.R")
 #install.packages("abind")
 #install.packages("circular")
 
-#set path to data files
-#list of file names to be read is set in extract.features.R
-path = "../../WT_ACV0/orig-data/"
-
+#load WT file names, adjust path in WT_ACV0-files.R tp point to the correct
+#directoty. To convert .mat files (rim information files) to csv use
+#rim-mat-2-csv.m in OctaveScripts (should be compatible with Matlab
+source("../Rscripts/WT_ACV0-files.R")
 
 #extract features
-F <- extract.all.features.expected()
+WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles, path, nRuns=1)
 
 #extract segments from features
 Slist <- extract.all.segments(F, k=20)

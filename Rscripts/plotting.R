@@ -144,7 +144,7 @@ plot.cluster.density <- function(K, S, bw=200){
 
 
 
-plot.clusters.distibutions <- function(K, S){   
+plot.clusters.distributions <- function(K, S){   
 
   library(MASS)
 
@@ -310,7 +310,7 @@ plot3d.location <- function(X, C){
  cols = c("black", "lightblue", "orange")
  plot3d(X, col=cols[C$maxPos], pch=19, type="s", r=0.025, asp="iso")
 
-}
+
 
 
 

@@ -9,130 +9,20 @@
 #peak fluctation is 0.15 pixels, sd 0.09 pixels
 
 
-#Set of files from which data is extracted
-
-#Set path to were files are located, if script is run in folder were data is
-#located the current setting will work.
-path = "./"
-
-
-files = c(
-"120202video12_xypts_transformed.csv",
-"120202video18_xypts_transformed.csv",
-"120202video6_xypts_transformed.csv",
-"120209video6_xypts_transformed.csv",
-"120218video13_xypts_transformed.csv",
-"120218video7_xypts_transformed.csv",
-"120316video5_xypts_transformed.csv",
-"120323video6_xypts_transformed.csv",
-"120328video7_xypts_transformed.csv",
-"120418video7_xypts_transformed.csv",
-"120427video7_xypts_transformed.csv",
-"120503video6_xypts_transformed.csv",
-"120517video16_xypts_transformed.csv",
-"120530video8_xypts_transformed.csv",
-"120605video38_xypts_transformed.csv",
-"120607video6_xypts_transformed.csv",
-"120612video36_xypts_transformed.csv",
-"120613video6_xypts_transformed.csv",
-"120614video8_xypts_transformed.csv",
-"120808video13_xypts_transformed.csv",
-"120809video7_xypts_transformed.csv",
-"120828video6_xypts_transformed.csv",
-"120829video1_xypts_transformed.csv",
-"120911video8_xypts_transformed.csv",
-"120913video7_xypts_transformed.csv",
-"120920video8_xypts_transformed.csv",
-"120925video6_xypts_transformed.csv",
-"120928video6_xypts_transformed.csv",
-"130213video8_xypts_transformed.csv",
-"130214video9_xypts_transformed.csv"
-)
-
-
-
-
-rimFiles <- c(
-"120202transformedrimpoints.matinner_transformed.csv",
-"120202transformedrimpoints.matinner_transformed.csv",
-"120202transformedrimpoints.matinner_transformed.csv",
-"120209transformedrimpoints.matinner_transformed.csv",
-"120218transformedrimpoints.matinner_transformed.csv",
-"120218transformedrimpoints.matinner_transformed.csv",
-"120316transformedrimpoints.matinner_transformed.csv",
-"120323transformedrimpoints.matinner_transformed.csv",
-"120328transformedrimpoints.matinner_transformed.csv",
-"120418transformedrimpoints.matinner_transformed.csv",
-"120427transformedrimpoints.matinner_transformed.csv",
-"120503transformedrimpoints.matinner_transformed.csv",
-"120517transformedrimpoints.matinner_transformed.csv",
-"120530transformedrimpoints.matinner_transformed.csv",
-"120605transformedrimpoints.matinner_transformed.csv",
-"120607transformedrimpoints.matinner_transformed.csv",
-"120612transformedrimpoints.matinner_transformed.csv",
-"120613transformedrimpoints.matinner_transformed.csv",
-"120614transformedrimpoints.matinner_transformed.csv",
-"120808transformedrimpoints.matinner_transformed.csv",
-"120809transformedrimpoints.matinner_transformed.csv",
-"120828transformedrimpoints.matinner_transformed.csv",
-"120829transformedrimpoints.matinner_transformed.csv",
-"120911transformedrimpoints.matinner_transformed.csv",
-"120913transformedrimpoints.matinner_transformed.csv",
-"120920transformedrimpoints.matinner_transformed.csv",
-"120925transformedrimpoints.matinner_transformed.csv",
-"120928transformedrimpoints.matinner_transformed.csv",
-"130213transformedrimpoints.matinner_transformed.csv",
-"130214transformedrimpoints.matinner_transformed.csv"
-)
-
-
-
-outerRimFiles <- c(
-"120202transformedrimpoints.matouter_transformed.csv",
-"120202transformedrimpoints.matouter_transformed.csv",
-"120202transformedrimpoints.matouter_transformed.csv",
-"120209transformedrimpoints.matouter_transformed.csv",
-"120218transformedrimpoints.matouter_transformed.csv",
-"120218transformedrimpoints.matouter_transformed.csv",
-"120316transformedrimpoints.matouter_transformed.csv",
-"120323transformedrimpoints.matouter_transformed.csv",
-"120328transformedrimpoints.matouter_transformed.csv",
-"120418transformedrimpoints.matouter_transformed.csv",
-"120427transformedrimpoints.matouter_transformed.csv",
-"120503transformedrimpoints.matouter_transformed.csv",
-"120517transformedrimpoints.matouter_transformed.csv",
-"120530transformedrimpoints.matouter_transformed.csv",
-"120605transformedrimpoints.matouter_transformed.csv",
-"120607transformedrimpoints.matouter_transformed.csv",
-"120612transformedrimpoints.matouter_transformed.csv",
-"120613transformedrimpoints.matouter_transformed.csv",
-"120614transformedrimpoints.matouter_transformed.csv",
-"120808transformedrimpoints.matouter_transformed.csv",
-"120809transformedrimpoints.matouter_transformed.csv",
-"120828transformedrimpoints.matouter_transformed.csv",
-"120829transformedrimpoints.matouter_transformed.csv",
-"120911transformedrimpoints.matouter_transformed.csv",
-"120913transformedrimpoints.matouter_transformed.csv",
-"120920transformedrimpoints.matouter_transformed.csv",
-"120925transformedrimpoints.matouter_transformed.csv",
-"120928transformedrimpoints.matouter_transformed.csv",
-"130213transformedrimpoints.matouter_transformed.csv",
-"130214transformedrimpoints.matouter_transformed.csv"
-)
 
 
 
 
 #read file number index in above files list and extract features
-extract.features <- function(index, lT=6, rm.na=T, std=0){
+extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T, std=0){
 
-  x <- read.table(sprintf("%s%s", path, files[index]), sep=",", header=T)
+  x <- read.table( xyFile, sep=",", header=T)
 
 
   x = x + matrix(rnorm(nrow(x)*ncol(x), sd=std), ncol = ncol(x))
 
-  irim = get.inner.rim(index);
-  orim = get.outer.rim(index);
+  irim = get.inner.rim(irFile);
+  orim = get.outer.rim(orFile);
   n = nrow(x)
 
   v1 = x;
@@ -193,11 +83,11 @@ extract.features <- function(index, lT=6, rm.na=T, std=0){
 }
 
 
-extract.all.features <- function(lT=6, rm.na=T){
+extract.all.features <- function(xyFiles, irFiles, orFiles, lT=6, rm.na=T){
   data <- list()
-  for( i in 1:length(files)){
+  for( i in 1:length(xyFiles) ){
     print(i)
-    data[[i]] = extract.features(i, lT, rm.na)
+    data[[i]] = extract.features(xyFiles[[i]], irFiles[[i]], orFiles[[i]], i, lT, rm.na)
   }
   data
 }
@@ -205,14 +95,14 @@ extract.all.features <- function(lT=6, rm.na=T){
 
 
 #Extract features with noise added and avergae over nRuns
-extract.all.features.expected <- function(lT=6, rm.na=T, nRuns=10, std=0.06){
+extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6, rm.na=T, nRuns=10, std=0.06){
   data <- list()
-  for( i in 1:length(files)){
+  for( i in 1:length(xyFiles)){
     print(i)
-    dataSum = extract.features(i, lT, rm.na=F)
+    dataSum = extract.features(xyFiles[[i]], irFiles[[i]], orFiles[[i]], i, lT, rm.na=F)
     dataSum$curvatureOrig = dataSum$curvature
     for(k in 1:nRuns){
-      dataTmp = extract.features(i, lT, rm.na=F, std)
+      dataTmp = extract.features( xyFiles[[i]], irFiles[[i]], orFiles[[i]], i, lT, rm.na=F, std )
 #data[[i]]$lengths = data[[i]]$lengths + dataTmp$lengths
       dataSum$cross = dataSum$cross + dataTmp$cross
       dataSum$u = dataSum$u + dataTmp$u
@@ -265,9 +155,9 @@ extract.all.features.expected <- function(lT=6, rm.na=T, nRuns=10, std=0.06){
 
 
 #get rim data for file i by circle fitting
-get.inner.rim <- function(i){
+get.inner.rim <- function(file){ 
   library(circular)
-  x <- read.table(sprintf("%s%s", path, rimFiles[i]), sep=",", header=F)
+  x <- read.table( file, sep=",", header=F)
   
   x <- x[1:(nrow(x)-1), ]
   circ = lsfit.circle(x)
@@ -279,10 +169,10 @@ get.inner.rim <- function(i){
 
 
 
-get.outer.rim <- function(i){
+get.outer.rim <- function(file){
   library(circular)
 
-  x <- read.table(sprintf("%s%s", path, outerRimFiles[i]), sep=",", header=F)
+  x <- read.table( file, sep=",", header=F)
   
   x <- x[1:(nrow(x)-1), ]
   circ = lsfit.circle(x)
@@ -362,6 +252,9 @@ extract.segments  <- function(X, k){
 }
 
 
+
+
+
 extract.sample.segments <- function(S, len, off=len/2){
   d = dim(S$lengths)
   index = 1
@@ -373,6 +266,9 @@ extract.sample.segments <- function(S, len, off=len/2){
   
  sample
 } 
+
+
+
 
 
 extract.sample <- function(S, len, off=len/2){
@@ -411,6 +307,8 @@ extract.condition.odor <- function(X, C){
 }
 
 
+
+
 extract.condition.odor.all <- function(Xlist, Slist){
 
   Xbefore1 = c()
@@ -435,3 +333,33 @@ extract.condition.odor.all <- function(Xlist, Slist){
        Xafter1 = Xafter1, Xafter2 = Xafter2)
 
 }
+
+
+
+
+
+extract.condition.odor.all.list <- function(Xlist, Slist){
+
+
+  O <- list()
+  index = 1
+  for(i in 1:length(Xlist) ){
+    res = extract.condition.odor( Xlist[[i]], Slist[[i]]$C )
+    O[[index]] = res$Xbefore1;
+    index = index +1
+    O[[index]] = res$Xbefore2;
+    index = index +1
+    O[[index]] = res$Xduring1;
+    index = index +1
+    O[[index]] = res$Xduring2;
+    index = index +1
+    O[[index]] = res$Xafter1;
+    index = index +1
+    O[[index]] = res$Xafter2;
+    index = index +1
+  }
+
+  O
+}
+
+
