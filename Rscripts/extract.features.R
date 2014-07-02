@@ -100,6 +100,8 @@ extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6, rm.na
   for( i in 1:length(xyFiles)){
     print(i)
     dataSum = extract.features(xyFiles[[i]], irFiles[[i]], orFiles[[i]], i, lT, rm.na=F)
+
+
     dataSum$curvatureOrig = dataSum$curvature
     for(k in 1:nRuns){
       dataTmp = extract.features( xyFiles[[i]], irFiles[[i]], orFiles[[i]], i, lT, rm.na=F, std )

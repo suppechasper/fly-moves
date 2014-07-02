@@ -1,6 +1,6 @@
-source("extract.features.R")
-source("procrustes.R")
-source("delay.reconstruction.R")
+source("../Rscripts/extract.features.R")
+source("../Rscripts/procrustes.R")
+source("../Rscripts/delay.reconstruction.R")
 
 #to install packages uncomment:
 #install.packages("shapes")
@@ -12,11 +12,12 @@ source("delay.reconstruction.R")
 #rim-mat-2-csv.m in OctaveScripts (should be compatible with Matlab
 source("../Rscripts/WT_ACV0-files.R")
 
+
 #extract features
-WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles, path, nRuns=1)
+WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles, nRuns=1)
 
 #extract segments from features
-Slist <- extract.all.segments(F, k=20)
+Slist <- extract.all.segments(WT, k=20)
 
 #do joint procrustes analysis
 gpa.joint <- procrustes.analysis.joint(Slist)
@@ -31,6 +32,9 @@ Z <- procrustes.extract.rawscores.joint(gpa.joint, Slist)
 #extracct all sgements based on odor condition
 O <- extract.condition.odor.all(Z, Slist) 
 
+
+Olist = list(O$Xbefore1, O$Xbefore2, O$Xduring1, O$Xduring2, O$Xafter1,
+    O$Xafter2) 
 
 #student t test of difference in pc
 #not particularly helpful...

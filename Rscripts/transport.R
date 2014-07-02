@@ -2,7 +2,7 @@
 
 
 #Pairwise Wassertien distance for list of matrices in Xin
-pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2){
+pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE){
   library(mop)
   library(pdist)
 
@@ -10,6 +10,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2){
   if( nrow(Xin[[1]]) > 200){
 
   gmra <- c()
+ 
   indices = c()
   for(i in 1:length(Xin)){
     nr = nrow(Xin[[i]])
@@ -25,9 +26,11 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2){
  
   
   
-  
+ 
+  plans = list() 
   dist = matrix( 0, nrow=length(gmra), ncol=length(gmra) )
 
+  count = 1;
   for(i in 1:(length(gmra)-1)){
     for(j in (i+1):length(gmra)){
       trp = multiscale.transport.duality.id(gmra1=gmra[i], gmra2 = gmra[j], p=2,
@@ -36,6 +39,10 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2){
      
       dist[i, j] = trp$cost[length(trp$cost)]
       dist[j, i] = dist[i, j]
+
+      plans[[i]] = list(trp = trp, i=i, j=j)
+          
+      count=count+1
       print(paste(i, j))
 #save(trp, file=sprintf("%s-%d-%d.Rdata", prefix, i, j))
     }
@@ -47,10 +54,11 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2){
       multiscale.transport.delete(i)
     }
 
-  res = list(D = dist)
+  res = list(D = dist, plans= plans)
 
   }
   else{
+    plans = list() 
     dist = matrix( 0, nrow=length(Xin), ncol=length(Xin) )
 
       for(i in 1:(length(Xin)-1) ){
@@ -59,14 +67,19 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2){
           trp = transport(rep(1/nrow(Xin[[i]]), nrow(Xin[[i]])),
                 rep(1/nrow(Xin[[j]]), nrow(Xin[[j]])), as.matrix(C) )
             dist[i, j] = trp$cost
-            dist[j, i] = dist[i, j]
+            dist[j, i] = dist[i, j]    
+            if(store.plan){
+              plans[[count]] = list(trp = trp, i=i, j=j)
+            }
+            count=count+1
+
 #save(trp, file=sprintf("%s-%d-%d.Rdata", prefix, i, j))
         }
         magc()
         print(i)
       }
 
-  res = list(D = dist)
+  res = list(D = dist, plans =plans)
 
   }
 
