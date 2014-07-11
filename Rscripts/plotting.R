@@ -310,7 +310,18 @@ plot3d.location <- function(X, C){
  cols = c("black", "lightblue", "orange")
  plot3d(X, col=cols[C$maxPos], pch=19, type="s", r=0.025, asp="iso")
 
+}
 
 
+plot.odor.6 <- function(X){
+ n =  nrow(X)
+ n = n/6
+
+ cols = rep(c("black", "black", "red", "orange", "darkblue", "blue"), n)
+ labs = sprintf("%s", t(matrix(1:30, ncol=6, nrow=n)))
+ 
+ plot(X, pch=".", col=cols, asp=1)
+ text(X, labels=labs, col=cols)
+}
 
 

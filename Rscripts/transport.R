@@ -2,7 +2,8 @@
 
 
 #Pairwise Wassertien distance for list of matrices in Xin
-pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE){
+pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
+    p=2){
   library(mop)
   library(pdist)
 
@@ -18,7 +19,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE){
       if( nr > 0){
 
         gmra <- c(gmra, multiscale.transport.create.ipca(X=Xin[[i]], d=d,
-            eps=eps, t=-1, split=1, stop=6) )
+            eps=eps, t=0.9, split=1, stop=6) )
         indices = c(indices, i)
       }
     }
@@ -33,15 +34,19 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE){
   count = 1;
   for(i in 1:(length(gmra)-1)){
     for(j in (i+1):length(gmra)){
-      trp = multiscale.transport.duality.id(gmra1=gmra[i], gmra2 = gmra[j], p=2,
-          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, factor=200)
+#trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
+#          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, rFactor=1,
+#          sType=0)
         
+      trp = multiscale.transport.randomized.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
+          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, nTrials=5)
      
       dist[i, j] = trp$cost[length(trp$cost)]
       dist[j, i] = dist[i, j]
 
-      plans[[i]] = list(trp = trp, i=i, j=j)
-          
+      if(store.plan){
+        plans[[count]] = list(trp = trp, i=i, j=j)
+      }
       count=count+1
       print(paste(i, j))
 #save(trp, file=sprintf("%s-%d-%d.Rdata", prefix, i, j))
@@ -63,7 +68,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE){
 
       for(i in 1:(length(Xin)-1) ){
         for(j in (i+1):length(Xin)){
-          C = pdist(Xin[[i]], Xin[[j]]);
+          C = as.matrix(dist(Xin[[i]], Xin[[j]]))^p
           trp = transport(rep(1/nrow(Xin[[i]]), nrow(Xin[[i]])),
                 rep(1/nrow(Xin[[j]]), nrow(Xin[[j]])), as.matrix(C) )
             dist[i, j] = trp$cost
@@ -136,6 +141,13 @@ pairs.transport <- function(Xfrom, Xto, eps=-1, scale=-1){
 
 
 
+transport.extract.paths <- function(trp, scale = length(trp$cost) ){
+  plan = trp$map[[scale]]
+
+  paths = trp$to[[scale]][plan[,2], ] -  trp$from[[scale]][plan[,1], ] 
+
+  res <- list(paths=paths, weights = plan[,3])
+}
 
 #Check if the distance between X1 and X2 is statistically significant
 transport.permutation.test <- function( X1, X2, eps, scale=0, nPerms=100 ){

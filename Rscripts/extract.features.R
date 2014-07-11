@@ -14,7 +14,8 @@
 
 
 #read file number index in above files list and extract features
-extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T, std=0){
+extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T,
+    std=0, uT=0){
 
   x <- read.table( xyFile, sep=",", header=T)
 
@@ -53,32 +54,50 @@ extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T, std=
   dorim = dorim[2:vn]
   dirim = dirim[2:vn]
   
-  u = apply(cbind(step[1:(vn-1)], step[2:vn]), 1, max)
-  if(rm.na == T){
-  ind = which(u < lT)
-  lengths = lengths[ind]
-  angles  = angles[ind]
-  cross   = cross[ind]
-  time    = time[ind]
-  dirim   = dirim[ind]
-  dorim   = dorim[ind]
-  x = x[ind +1, ]
+  u = apply(cbind(step[1:(vn-1)], step[2:vn]), 1, max)    
+  v = apply(cbind(step[1:(vn-1)], step[2:vn]), 1, min)    
   
-  ind2 = complete.cases(angles)
-  lengths = lengths[ind2]
-  angles  = angles[ind2]
-  cross   = cross[ind2]
 
-  time    = time[ind2]
-  dirim   = dirim[ind2]
-  dorim   = dorim[ind2]
-  x = x[ind2, ]
+  x=x[2:(nrow(x)-1), ]
+
+  if(rm.na == T){
+    ind = which(u < lT)
+      lengths = lengths[ind]
+      angles  = angles[ind]
+      cross   = cross[ind]
+      time    = time[ind]
+      dirim   = dirim[ind]
+      dorim   = dorim[ind]
+      ris = ris[ind, ]
+      x = x[ind, ]
+
+
+      ind = which(v[ind] > uT)
+      lengths = lengths[ind]
+      angles  = angles[ind]
+      cross   = cross[ind]
+      time    = time[ind]
+      dirim   = dirim[ind]
+      dorim   = dorim[ind]
+      ris = ris[ind, ]
+      x = x[ind, ]
+
+      ind2 = complete.cases(angles)
+      lengths = lengths[ind2]
+      angles  = angles[ind2]
+      cross   = cross[ind2]
+
+      time    = time[ind2]
+      dirim   = dirim[ind2]
+      dorim   = dorim[ind2]
+      x = x[ind2, ]
+      ris = ris[ind2, ]
   }
 
 
   list( lengths = lengths, angles=angles, cross = cross, id = index, time = time,
         dorim = dorim, dirim = dirim, curvature = sign(cross)*acos(angles),
-        ris=ris, x = x, u=u )
+        ris=ris, x = x, u=u, v=v )
 
 }
 
@@ -95,43 +114,61 @@ extract.all.features <- function(xyFiles, irFiles, orFiles, lT=6, rm.na=T){
 
 
 #Extract features with noise added and avergae over nRuns
-extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6, rm.na=T, nRuns=10, std=0.06){
+extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6,
+    uT=0.5,  rm.na=T, nRuns=10, std=0.06){
   data <- list()
   for( i in 1:length(xyFiles)){
     print(i)
-    dataSum = extract.features(xyFiles[[i]], irFiles[[i]], orFiles[[i]], i, lT, rm.na=F)
+    dataSum = extract.features(xyFiles[[i]], irFiles[[i]], orFiles[[i]], i,
+        lT=1000, rm.na=F, uT=-1)
 
 
     dataSum$curvatureOrig = dataSum$curvature
     for(k in 1:nRuns){
-      dataTmp = extract.features( xyFiles[[i]], irFiles[[i]], orFiles[[i]], i, lT, rm.na=F, std )
+      dataTmp = extract.features( xyFiles[[i]], irFiles[[i]], orFiles[[i]], i,
+          lT=1000, rm.na=F, std=std, uT=-1)
 #data[[i]]$lengths = data[[i]]$lengths + dataTmp$lengths
-      dataSum$cross = dataSum$cross + dataTmp$cross
-      dataSum$u = dataSum$u + dataTmp$u
-      dataSum$angles = dataSum$angles + dataTmp$angles
-      dataSum$curvature = dataSum$curvature + dataTmp$curvature
-      dataSum$ris = dataSum$ris + dataTmp$ris
+        dataSum$cross = dataSum$cross + dataTmp$cross
+        dataSum$u = dataSum$u + dataTmp$u
+        dataSum$v = dataSum$v + dataTmp$v
+        dataSum$angles = dataSum$angles + dataTmp$angles
+        dataSum$curvature = dataSum$curvature + dataTmp$curvature
+        dataSum$ris = dataSum$ris + dataTmp$ris
     }
 # data[[i]]$length = data[[i]]$length / (nRuns+1) 
     dataSum$cross = dataSum$cross / (nRuns+1) 
     dataSum$u = dataSum$u / (nRuns+1) 
+    dataSum$v = dataSum$v / (nRuns+1) 
     dataSum$angles = dataSum$angles / (nRuns+1) 
     dataSum$curvatureMean = dataSum$curvature / (nRuns+1) 
     dataSum$ris = dataSum$ris / (nRuns+1) 
   
-    if(rm.na == T){
-       ind = which(dataSum$u < lT)
-        dataSum$lengths = dataSum$lengths[ind]
-        dataSum$angles  = dataSum$angles[ind]
-        dataSum$cross   = dataSum$cross[ind]
-        dataSum$time    = dataSum$time[ind]
-        dataSum$dirim   = dataSum$dirim[ind]
-        dataSum$dorim   = dataSum$dorim[ind]
-        dataSum$curvatureMean   = dataSum$curvatureMean[ind]
-        dataSum$curvatureOrig   = dataSum$curvatureOrig[ind]
-        dataSum$x = dataSum$x[ind +1, ]
-        dataSum$ris  = dataSum$ris[ind, ]
+    ind = which(dataSum$u < lT)
+    dataSum$lengths = dataSum$lengths[ind]
+    dataSum$angles  = dataSum$angles[ind]
+    dataSum$cross   = dataSum$cross[ind]
+    dataSum$time    = dataSum$time[ind]
+    dataSum$dirim   = dataSum$dirim[ind]
+    dataSum$dorim   = dataSum$dorim[ind]
+    dataSum$curvatureMean   = dataSum$curvatureMean[ind]
+    dataSum$curvatureOrig   = dataSum$curvatureOrig[ind]
+    dataSum$x = dataSum$x[ind, ]
+    dataSum$ris  = dataSum$ris[ind, ]
+   
+    ind = which(dataSum$v[ind] > uT)
+    dataSum$lengths = dataSum$lengths[ind]
+    dataSum$angles  = dataSum$angles[ind]
+    dataSum$cross   = dataSum$cross[ind]
+    dataSum$time    = dataSum$time[ind]
+    dataSum$dirim   = dataSum$dirim[ind]
+    dataSum$dorim   = dataSum$dorim[ind]
+    dataSum$curvatureMean   = dataSum$curvatureMean[ind]
+    dataSum$curvatureOrig   = dataSum$curvatureOrig[ind]
+    dataSum$x = dataSum$x[ind, ]
+    dataSum$ris  = dataSum$ris[ind, ]
 
+
+    if(rm.na == T){
         ind = complete.cases(dataSum$angles)
         dataSum$lengths = dataSum$lengths[ind]
         dataSum$angles  = dataSum$angles[ind]
@@ -202,20 +239,22 @@ extract.all.segments <- function(features, k){
 
 
 #extract segements of length k from a single feature set X 
-extract.segments  <- function(X, k){    
-   n = length( X$lengths )
-     lengths=c()
-     curvature=c()
-     dirim=c()
-     dorim=c()
-     time=c()
-     x=c()
-     y=c()
-     rx=c()
-     ry=c()
-     for(j in 1:k){
-        lengths = cbind( lengths, X$lengths[j:(n-k+j)])
+extract.segments  <- function(X, k, rm.jumps=k>1){    
+  n = length( X$lengths )
+    lengths=c()
+    curvature=c()
+    curvatureMean=c()
+    dirim=c()
+    dorim=c()
+    time=c()
+    x=c()
+    y=c()
+    rx=c()
+    ry=c()
+    for(j in 1:k){
+      lengths = cbind( lengths, X$lengths[j:(n-k+j)])
         curvature = cbind( curvature, X$curvature[j:(n-k+j)])
+        curvatureMean = cbind( curvatureMean, X$curvatureMean[j:(n-k+j)])
         dirim = cbind( dirim, X$dirim[j:(n-k+j)])
         dorim = cbind( dorim, X$dorim[j:(n-k+j)])
         time = cbind( time, X$time[j:(n-k+j)])
@@ -225,31 +264,48 @@ extract.segments  <- function(X, k){
         ry = cbind( ry,X$ris[j:(n-k+j),2])
 
     }
-    C = matrix(0, nrow=nrow(lengths), ncol=11)
 
-      start1 = which(X$time > 5400 & X$dirim > 0)
-      start1 = X$time[start1[1]]
-      start2 = start1+300
-      start3 = start2+600
-      for( k in 1:nrow(C) ){
-        C[k, 1] = sum( X$conds[[k]]$time < start1 )
-          C[k, 2] = sum( time[k, ] > start1 & time[k, ]  < start2 )
-          C[k, 3] = sum( time[k, ] > start2 & time[k, ]  < start3 )
-          C[k, 4] = sum( time[k, ] > start3 & time[k, ]  < 10800 )
-          C[k, 5] = sum( time[k, ] > 10800 )
-          C[k, 6] = which.max(C[k, 1:5])
-          C[k, 7] = mean(time[k, ]) - start1
+  if(rm.jumps){
+    jump = time[,k] - time[,1]
+    ind  = which(jump == ( k-1))
+    lengths = lengths[ind, ]
+    curvature = curvature[ind, ]  
+    curvatureMean = curvatureMean[ind, ]  
+    dirim = dirim[ind, ]
+    dorim = dorim[ind, ]
+    time = time[ind, ]
+    x = x[ind, ]
+    y = y[ind, ]
+    rx = rx[ind, ]
+    ry = ry[ind, ]
+  }
 
-          C[k, 8] =  sum(dorim[k,] < 20)
-          C[k, 9] = sum( dorim[k,] >= 20 & X$conds[[k]]$dirim < -5)
-          C[k, 10] = sum( dirim[k,] > -5 )
-          C[k, 11] = which.max(C[k, 8:10])
-      }
-    colnames(C) <- c("before", "odor1", "odor2", "odor3", "after", "maxOdor",
-        "timeToOdor", "outer", "middler", "inner", "maxPos");
 
-   list( lengths = lengths, curvature=curvature, dirim=dirim, dorim=dorim,
-       time=time,x=x, y=y, rx=rx, ry=ry, C=as.data.frame(C), id=X$id)
+  C = matrix(0, nrow=nrow(lengths), ncol=11)
+
+    start1 = which(X$time > 5400 & X$dirim > 0)
+    start1 = X$time[start1[1]]
+    start2 = start1+300
+    start3 = start2+600
+    for( k in 1:nrow(C) ){
+      C[k, 1] = sum( time[k, ] < start1 )
+        C[k, 2] = sum( time[k, ] > start1 & time[k, ]  < start2 )
+        C[k, 3] = sum( time[k, ] > start2 & time[k, ]  < start3 )
+        C[k, 4] = sum( time[k, ] > start3 & time[k, ]  < 10800 )
+        C[k, 5] = sum( time[k, ] > 10800 )
+        C[k, 6] = which.max(C[k, 1:5])
+        C[k, 7] = mean(time[k, ]) - start1
+
+        C[k, 8] =  sum(dorim[k,] < 20)
+        C[k, 9] = sum( dorim[k,] >= 20 & dirim[k, ] < -5)
+        C[k, 10] = sum( dirim[k,] > -5 )
+        C[k, 11] = which.max(C[k, 8:10])
+    }
+  colnames(C) <- c("before", "odor1", "odor2", "odor3", "after", "maxOdor",
+      "timeToOdor", "outer", "middler", "inner", "maxPos");
+
+  list( lengths = lengths, curvature=curvature, curvatureMean=curvatureMean, dirim=dirim, dorim=dorim,
+      time=time,x=x, y=y, rx=rx, ry=ry, C=as.data.frame(C), id=X$id)
 
 }
 

@@ -122,6 +122,7 @@ procrustes.plot <- function(gpa, pc=1, factor=1){
   d = dim( gpa$mshape )
   dir = factor* gpa$pcasd[pc] *matrix(gpa$pcar[,pc] , nrow=d[1])
   
+  layout( matrix(1:3, nrow=1) )
   pc.segment.plot(gpa$mshape, dir, factor, pc)
 
 }
@@ -131,12 +132,14 @@ pc.segment.plot.vectorize <- function(pca, dim, factor, pc){
 
   dir = factor* pca$sdev[pc] *matrix(pca$rotation[,pc] , nrow=dim)
 
+  layout( matrix(1:3, nrow=1) )
   pc.segment.plot(mean, dir, factor, pc)
 }
 
+
+
 pc.segment.plot <- function(mean, dir, factor, pc){
 
-  layout( matrix(1:3, nrow=1) )
   
   n = nrow(mean)
   xlim = range(mean[,1]) + range(dir[,1])
@@ -159,6 +162,38 @@ pc.segment.plot <- function(mean, dir, factor, pc){
 }
 
 
+#plot principal segments from procrustes analysis
+procrustes.qq.plot <- function(gpa, pc=1, factor=1, O){
+
+
+  par(mar=c(5,5,5,5))
+  d = dim( gpa$mshape )
+  dir = factor* gpa$pcasd[pc] *matrix(gpa$pcar[,pc] , nrow=d[1])
+  
+  layout( t(matrix(1:9, nrow=3)) )
+  pc.segment.plot(gpa$mshape, dir, factor, pc)
+
+  qqplot(O$Xbefore1[, pc], O$Xbefore2[, pc], xlab="Before 1", ylab="Before 2",
+      pch=19, col="#00000030", cex.axis=2, cex.lab=2)
+  abline(0,1, col="red")
+  
+  qqplot(O$Xbefore1[, pc], O$Xduring1[, pc], xlab="Before 1", ylab="During 1",
+      pch=19, col="#00000030", cex.axis=2, cex.lab=2)
+  abline(0,1, col="red")
+  
+  qqplot(O$Xbefore1[, pc], O$Xduring2[, pc], xlab="Before 1", ylab="During 2",
+      pch=19, col="#00000030", cex.axis=2, cex.lab=2)
+  abline(0,1, col="red")
+  
+  qqplot(O$Xbefore1[, pc], O$Xafter1[, pc], xlab="Before 1", ylab="After 1",
+      pch=19, col="#00000030", cex.axis=2, cex.lab=2)
+  abline(0,1, col="red")
+  
+  qqplot(O$Xbefore1[, pc], O$Xafter2[, pc], xlab="Before 1", ylab="After 2",
+      pch=19, col="#00000030", cex.axis=2, cex.lab=2)
+  abline(0,1, col="red")
+
+}
 
 
 

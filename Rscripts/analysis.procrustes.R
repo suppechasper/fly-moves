@@ -34,6 +34,11 @@ Z <- procrustes.extract.rawscores.joint(gpa.joint, Slist)
 O <- extract.condition.odor.all(Z, Slist) 
 
 
+
+procrustes.qq.plot(gpa.joint, pc=3, factor=3, O)
+
+
+#pairwise t/f tests
 TPlist <- list()
 Tlist <- list()
 
