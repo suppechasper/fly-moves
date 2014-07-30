@@ -15,46 +15,25 @@ source("../Rscripts/WT_ACV0-files.R")
 
 
 #extract features
-WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles, nRuns=1)
+WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
+  nRuns=10, std=0.1, lT=5, uT=0.25)
 
 #extract segments from features
-Slist <- extract.all.segments(WT, k=20)
+Slist <- extract.all.segments(WT, k=1)
 
-#do joint procrustes analysis
-gpa.joint <- procrustes.analysis.joint(Slist)
-
-#plot first and second principal segment
-procrustes.plot(gpa.joint, pc=1, factor=1)
-procrustes.plot(gpa.joint, pc=2, factor=3)
-
-#extract the pca transformed coordinate sof the segments for each subject
-Z <- procrustes.extract.rawscores.joint(gpa.joint, Slist)
-
-
-O.trp <- list()
-paths <- list()
-
-for(i in 1:length(Z)){
-  #extracct all sgements based on odor condition
-  O <- extract.condition.odor(Z[[i]], Slist[[i]]$C) 
-
-  #put all oders in a list
-  Olist <- list(O$Xbefore1, O$Xbefore2, O$Xduring1, O$Xduring2, O$Xafter1,
-    O$Xafter2)
-
-
-  trp <- pairwise.transport(Xin = Olist, eps=0.000001, scale=-1, d=3, store.plan=T)
-
-  P <- list()
-  for(j in 1:length(trp$plans)){
-    P[[j]] <- transport.extract.paths(trp$plans[[j]]$trp,
-        length(trp$plans[[j]]$trp$cost) )
-  }
-  paths[[i]] = P
-  O.trp[[i]] = trp;
-
+Z <- list()
+for( i in 1:length(Slist) ){
+  Z[[i]] = cbind(Slist[[i]]$curvatureMean, Slist[[i]]$lengths)
 }
 
+#extracct all sgements based on odor condition
+O <- extract.condition.odor.all(Z, Slist) 
+
+  
+trp <- pairwise.transport(Xin = O, eps=0.0001, scale=-1, d=2, store.plan=T, p=1)
+
+multiscale.transport.plot.map(trp$plans[[2]]$trp, 8, pointAlpha=0, arrows=T,
+    mapAlpha=0.7, arrow.angle=10, arrow.length=0.1, lwd=2)
 
 
 

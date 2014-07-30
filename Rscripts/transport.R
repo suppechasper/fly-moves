@@ -34,12 +34,12 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
   count = 1;
   for(i in 1:(length(gmra)-1)){
     for(j in (i+1):length(gmra)){
-#trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
-#          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, rFactor=1,
-#          sType=0)
+trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
+          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, rFactor=2,
+          sType=0)
         
-      trp = multiscale.transport.randomized.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
-          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, nTrials=5)
+#      trp = multiscale.transport.randomized.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
+#          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, nTrials=5)
      
       dist[i, j] = trp$cost[length(trp$cost)]
       dist[j, i] = dist[i, j]
