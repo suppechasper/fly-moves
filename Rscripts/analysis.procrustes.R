@@ -10,7 +10,9 @@ source("../Rscripts/delay.reconstruction.R")
 #load WT file names, adjust path in WT_ACV0-files.R tp point to the correct
 #directoty. To convert .mat files (rim information files) to csv use
 #rim-mat-2-csv.m in OctaveScripts (should be compatible with Matlab
-source("../Rscripts/WT_ACV0-files.R")
+seg.len = 20
+prefix="Orco"
+source("../Rscripts/Orco_ACV0-files.R")
 
 
 #extract features
@@ -18,14 +20,14 @@ WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
   nRuns=10, lT=5, uT=-1)
 
 #extract segments from features
-Slist <- extract.all.segments(WT, k=20)
+Slist <- extract.all.segments(WT, k=seg.len)
 
 #do joint procrustes analysis
 gpa.joint <- procrustes.analysis.joint(Slist)
 
 #plot first and second principal segment
-procrustes.plot(gpa.joint, pc=1, factor=1)
-procrustes.plot(gpa.joint, pc=2, factor=3)
+#procrustes.plot(gpa.joint, pc=1, factor=1)
+#procrustes.plot(gpa.joint, pc=2, factor=3)
 
 #extract the pca transformed coordinate sof the segments for each subject
 Z <- procrustes.extract.rawscores.joint(gpa.joint, Slist)
@@ -34,9 +36,17 @@ Z <- procrustes.extract.rawscores.joint(gpa.joint, Slist)
 O <- extract.condition.odor.all(Z, Slist) 
 
 
+for(i in 1:10){
+  f = 3;
+  if(i==1){
+    f=1
+  }
+  procrustes.qq.plot(gpa.joint, pc=i, factor=f, O, 10000)
+  dev.copy2pdf( file=sprintf("%s-seglen-%d-qqplot-pc-%d.pdf", prefix, seg.len, i) )
+}
 
-procrustes.qq.plot(gpa.joint, pc=3, factor=3, O)
 
+if(F){
 
 #pairwise t/f tests
 TPlist <- list()
@@ -71,4 +81,4 @@ for(i in 1:(length(O)-1) ){
     }
   }
 }
-
+}

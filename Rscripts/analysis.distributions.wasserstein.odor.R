@@ -11,6 +11,8 @@ source("../Rscripts/delay.reconstruction.R")
 #load WT file names, adjust path in WT_ACV0-files.R tp point to the correct
 #directoty. To convert .mat files (rim information files) to csv use
 #rim-mat-2-csv.m in OctaveScripts (should be compatible with Matlab
+
+prefix="ACV0"
 source("../Rscripts/WT_ACV0-files.R")
 
 
@@ -28,12 +30,22 @@ for( i in 1:length(Slist) ){
 
 #extracct all sgements based on odor condition
 O <- extract.condition.odor.all(Z, Slist) 
-
+O.names = names(O)
   
 trp <- pairwise.transport(Xin = O, eps=0.0001, scale=-1, d=2, store.plan=T, p=1)
 
-multiscale.transport.plot.map(trp$plans[[2]]$trp, 8, pointAlpha=0, arrows=T,
-    mapAlpha=0.7, arrow.angle=10, arrow.length=0.1, lwd=2)
+for(i in 1:length(trp$plans)){
+  
+  plan = trp$plans[[i]]$trp
+  for(s in 1:length(plan$cost)){
+    multiscale.transport.plot.map(plans, s, pointAlpha=0, arrows=T,
+        mapAlpha=1, arrow.angle=10, arrow.length=0.1, lwd=2, xlab="curvature",
+        ylab="speed")
+    title( sprintf("%s to %s scale %i",
+          O.names[trp$plans[[i]]$i], O.names[trp$plans[[i]]$j], s ) )
+  }
+
+}
 
 
 

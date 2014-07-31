@@ -17,7 +17,7 @@
 extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T,
     std=0, uT=0){
 
-  x <- read.table( xyFile, sep=",", header=T)
+  x <- read.table( xyFile, sep=",", header=T, colClasses="numeric")
 
 
   x = x + matrix(rnorm(nrow(x)*ncol(x), sd=std), ncol = ncol(x))
@@ -196,7 +196,7 @@ extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6,
 #get rim data for file i by circle fitting
 get.inner.rim <- function(file){ 
   library(circular)
-  x <- read.table( file, sep=",", header=F)
+  x <- read.table( file, sep=",", header=F, colClasses="numeric")
   
   x <- x[1:(nrow(x)-1), ]
   circ = lsfit.circle(x)
@@ -211,7 +211,7 @@ get.inner.rim <- function(file){
 get.outer.rim <- function(file){
   library(circular)
 
-  x <- read.table( file, sep=",", header=F)
+  x <- read.table( file, sep=",", header=F, colClasses="numeric")
   
   x <- x[1:(nrow(x)-1), ]
   circ = lsfit.circle(x)

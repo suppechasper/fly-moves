@@ -144,26 +144,26 @@ pc.segment.plot <- function(mean, dir, factor, pc){
   n = nrow(mean)
   xlim = range(mean[,1]) + range(dir[,1])
   ylim = range(mean[,2]) + range(dir[,2])
-  plot(mean + dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
-      ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
-  points( (mean+dir)[2:n, ], pch=19, col="#00000090",cex=2)
-  title(sprintf("Mean + %d sd * PC %d", factor, pc), cex.main=2)
 
-  plot(mean, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
-      ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
-  points((mean)[2:n, ], pch=19, col="#00000090",cex=2)
-  title("Mean", cex.main=2)
-  
   plot(mean - dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
       ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
   points((mean - dir)[2:n, ], pch=19, col="#00000090",cex=2)
   title(sprintf("Mean - %d sd * PC %d", factor, pc), cex.main=2)
   
+  plot(mean, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
+      ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
+  points((mean)[2:n, ], pch=19, col="#00000090",cex=2)
+  title("Mean", cex.main=2)
+  
+  plot(mean + dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
+      ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
+  points( (mean+dir)[2:n, ], pch=19, col="#00000090",cex=2)
+  title(sprintf("Mean + %d sd * PC %d", factor, pc), cex.main=2)
 }
 
 
 #plot principal segments from procrustes analysis
-procrustes.qq.plot <- function(gpa, pc=1, factor=1, O){
+procrustes.qq.plot <- function(gpa, pc=1, factor=1, O, n=1000){
 
 
   par(mar=c(5,5,5,5))
@@ -173,23 +173,39 @@ procrustes.qq.plot <- function(gpa, pc=1, factor=1, O){
   layout( t(matrix(1:9, nrow=3)) )
   pc.segment.plot(gpa$mshape, dir, factor, pc)
 
-  qqplot(O$Xbefore1[, pc], O$Xbefore2[, pc], xlab="Before 1", ylab="Before 2",
+
+  b1 = sort(O$Xbefore1[, pc])
+  b1 = b1[seq(1, length(b1), length.out=n)]
+  b2 = sort(O$Xbefore2[, pc])
+  b2 = b2[seq(1, length(b2), length.out=n)]
+  
+  d1 = sort(O$Xduring1[, pc])
+  d1 = d1[seq(1, length(d1), length.out=n)]
+  d2 = sort(O$Xduring2[, pc])
+  d2 = d2[seq(1, length(d2), length.out=n)]
+  
+  a1 = sort(O$Xafter1[, pc])
+  a1 = a1[seq(1, length(a1), length.out=n)]
+  a2 = sort(O$Xafter2[, pc])
+  a2 = a2[seq(1, length(a2), length.out=n)]
+
+  plot(b1, b2, xlab="Before 1", ylab="Before 2",
       pch=19, col="#00000030", cex.axis=2, cex.lab=2)
   abline(0,1, col="red")
   
-  qqplot(O$Xbefore1[, pc], O$Xduring1[, pc], xlab="Before 1", ylab="During 1",
+  qqplot(b1, d1, xlab="Before 1", ylab="During 1",
       pch=19, col="#00000030", cex.axis=2, cex.lab=2)
   abline(0,1, col="red")
   
-  qqplot(O$Xbefore1[, pc], O$Xduring2[, pc], xlab="Before 1", ylab="During 2",
+  qqplot(b1, d2, xlab="Before 1", ylab="During 2",
       pch=19, col="#00000030", cex.axis=2, cex.lab=2)
   abline(0,1, col="red")
   
-  qqplot(O$Xbefore1[, pc], O$Xafter1[, pc], xlab="Before 1", ylab="After 1",
+  qqplot(b1, a1, xlab="Before 1", ylab="After 1",
       pch=19, col="#00000030", cex.axis=2, cex.lab=2)
   abline(0,1, col="red")
   
-  qqplot(O$Xbefore1[, pc], O$Xafter2[, pc], xlab="Before 1", ylab="After 2",
+  qqplot(b1, a2, xlab="Before 1", ylab="After 2",
       pch=19, col="#00000030", cex.axis=2, cex.lab=2)
   abline(0,1, col="red")
 
