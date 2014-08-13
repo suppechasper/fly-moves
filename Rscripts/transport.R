@@ -3,7 +3,10 @@
 
 #Pairwise Wassertien distance for list of matrices in Xin
 pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
-    p=2){
+    p=2, lambda=0, oType=26, rFactor=2, stop=6, split=1, sType=0,
+    weight=as.list(rep(1, length(Xin))) ){
+
+
   library(mop)
   library(pdist)
 
@@ -19,7 +22,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
       if( nr > 0){
 
         gmra <- c(gmra, multiscale.transport.create.ipca(X=Xin[[i]], d=d,
-            eps=eps, t=0.9, split=1, stop=6) )
+            eps=eps, t=0.9, split=split, stop=stop) )
         indices = c(indices, i)
       }
     }
@@ -34,9 +37,10 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
   count = 1;
   for(i in 1:(length(gmra)-1)){
     for(j in (i+1):length(gmra)){
-trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
-          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, rFactor=2,
-          sType=0)
+
+      trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
+          scale1=scale, scale2=scale, matchScale=FALSE, rFactor=rFactor,
+          sType=sType, lambda=lambda, oType=oType, w1=weight[[i]], w2=weight[[j]])
         
 #      trp = multiscale.transport.randomized.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
 #          scale1=scale, scale2=scale, oType=26, matchScale=FALSE, nTrials=5)
@@ -70,7 +74,7 @@ trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
         for(j in (i+1):length(Xin)){
           C = as.matrix(dist(Xin[[i]], Xin[[j]]))^p
           trp = transport(rep(1/nrow(Xin[[i]]), nrow(Xin[[i]])),
-                rep(1/nrow(Xin[[j]]), nrow(Xin[[j]])), as.matrix(C) )
+                rep(1/nrow(Xin[[j]]), nrow(Xin[[j]])), as.matrix(C), lambda=lambda, oType=oType )
             dist[i, j] = trp$cost
             dist[j, i] = dist[i, j]    
             if(store.plan){
@@ -354,4 +358,97 @@ pairwise.transport.time <- function(tp, scale, eps){
   res = list(X = X, trp =trp)
 
   res
+}
+
+
+plot.pc.transport.map <-function( ot, index, pcs = c(1,2) ){
+
+  plan = ot$map[[index]]
+  V = ot$from[[index]][ plan[,1], ] - ot$to[[index]][ plan[,2], ]
+  
+  V = V# * rep(plan[,3], ncol(V))
+
+  pc <- prcomp(V, center=FALSE)
+  X1 = ot$from[[index]] %*% pc$rotation
+  X2 = ot$to[[index]] %*% pc$rotation
+    
+  multiscale.transport.plot.map(ot, index, pointAlpha=0, arrows=T,
+        mapAlpha=1, arrow.angle=10, arrow.length=0.1, lwd=2,
+        xlab= sprintf("OT-PC %d", pcs[1]), ylab= sprintf("OT-PC %d", pcs[2]), X1=X1,
+        X2=X2 )
+
+  pc
+}
+
+
+
+
+plot.binnned.transport.map <- function(trp, xbins, ybins, xlab="Curvature",
+    ylab="Speed", col="black", arrow.length=0.1, arrow.angle=15, alpha=1, lwd=2,
+    add = FALSE, cex.axis=1, cex.lab=1, cex=1, useTransparancy=FALSE,
+    useCost=FALSE, maxW, maxC){
+
+ 
+  l = length(trp$cost)
+
+
+  nx = length(xbins)
+  xloc = xbins[1:(nx-1)] + (xbins[2:nx] - xbins[1:(nx-1)]) / 2 
+  
+  ny = length(ybins)
+  yloc = ybins[1:(ny-1)] + (ybins[2:ny] - ybins[1:(ny-1)]) / 2 
+
+
+  w = matrix(0, ncol = length(xbins)-1, nrow = length(ybins)-1)
+  cost = w;
+  dx = w
+  dy = w
+
+  plan = trp$map[[l]]
+  from = trp$from[[l]]
+  to = trp$to[[l]]
+  
+  xb = cut(from[ plan[, 1], 1] , xbins)
+  yb = cut(from[ plan[, 1], 2], ybins)
+
+  delta = to[ plan[, 2], ] - from[ plan[,1], ]
+  for(i in 1:nrow(plan)){
+    cost[yb[i], xb[i]] = cost[yb[i], xb[i]]  + plan[i, 3] * plan[i, 4]
+      
+    w[yb[i], xb[i]] = w[yb[i], xb[i]]  + plan[i, 3]
+    dx[yb[i], xb[i]] = dx[yb[i], xb[i]]  + plan[i, 3] * delta[i, 1]
+    dy[yb[i], xb[i]] = dy[yb[i], xb[i]]  + plan[i, 3] * delta[i, 2]
+  }
+
+  dx = dx / w
+  dy = dy / w
+  w = w/max(w)
+  cost = cost/max(cost)
+
+  if(useCost){
+    w=cost
+  }
+
+  if(!add){
+    plot(NA, xlim=range(xbins), ylim=range(ybins), xlab=xlab, ylab=ylab,
+        cex=cex, cex.axis=cex.axis, cex.lab=cex.lab, bty="n")
+  }
+
+  for(i in 1:ncol(w)){
+    for(j in 1:nrow(w)){
+      if(useTransparancy){
+        arrows( x0 = xloc[i], y0 = yloc[j], x1 = xloc[i]+dx[j, i], y1 = yloc[j]
+          +dy[j, i], col=rgb( t(col2rgb(col)/255), alpha=0.05+0.95*w[j,i]), lwd=lwd, angle=arrow.angle,
+          code=2, length=arrow.length )
+      }
+      else{
+        arrows( x0 = xloc[i], y0 = yloc[j], x1 = xloc[i]+dx[j, i], y1 = yloc[j]
+          +dy[j, i], col=rgb( t(col2rgb(col)/255), alpha=0.7), lwd=1+w[j,i]*lwd, angle=arrow.angle,
+          code=2, length=arrow.length )
+      }
+    }
+  }
+
+  list(w=w, dx=dx, dy=dy)
+
 }

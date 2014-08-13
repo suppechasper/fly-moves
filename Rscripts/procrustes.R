@@ -11,10 +11,10 @@ procrustes.analysis <- function(S, scale=FALSE){
 
 
 #do joint procrustes analysis on the list of segments in Slist
-procrustes.analysis.joint <- function(Slist){
+procrustes.analysis.joint <- function(Slist, scale=FALSE){
   library(shapes)
   P = extract.procrustes.block.from.segments(Slist)
-  procGPA(P, scale=FALSE, pcaoutput=TRUE, proc.output=TRUE, distances=FALSE)
+  procGPA(P, scale=scale, pcaoutput=TRUE, proc.output=TRUE, distances=FALSE)
 }
 
 
@@ -53,13 +53,14 @@ extract.procrustes.block.from.segment <- function(S){
 
 
 #Extract per subject gpa results
-procrustes.extract.rawscores.joint <-function(gpa, Slist){
+procrustes.extract.rawscores.joint <-function(gpa, Slist, coords =
+    1:nol(gpa$rawscores)){
   
   Z = list()
   index = 1
   for(i in 1:length(Slist)){
     n = nrow(Slist[[i]]$C)
-    Z[[i]] = gpa$rawscores[index:(index+n-1), ]
+    Z[[i]] = gpa$rawscores[index:(index+n-1), coords]
     index = index + n
   }
 
