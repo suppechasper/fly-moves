@@ -212,8 +212,123 @@ procrustes.qq.plot <- function(gpa, pc=1, factor=1, O, n=1000){
 
 }
 
+#plot principal segments from procrustes analysis
+procrustes.time.plot <- function(gpa, pc=1, factor=1, Z, times, ncuts=501,
+    col="#000000", bw=100, add=F){
 
 
+  library(KernSmooth)
+
+
+  ctimes = cut(times, ncuts)
+  levs = levels(ctimes)
+  me = rep(0, length(levs))
+  va = rep(0, length(levs))
+  for(i in 1:length(levs) ){
+    ind = which(ctimes == levs[i])
+    me[i] = mean(Z[ind,pc])
+    va[i] = var(Z[ind,pc])
+  }
+
+
+  x = seq(min(times), max(times), length.out=ncuts+1)
+  x = (x[1:ncuts]+x[2:(ncuts+1)])/2
+ 
+  rx = range(times)
+  pme = locpoly(x=x, y=me, bandwidth=bw) 
+  pva = locpoly(x=x, y=va, bandwidth=bw) 
+  vam = 2*sqrt(max(pva$y))
+
+
+  if(add){
+   lines( pme$x, sqrt(pva$y), col=col, lwd=4 ) 
+  }
+  else{
+    plot( pme$x, sqrt(pva$y), col=col, lwd=4, bty="n", type="l",
+      ylim=c(0.5, 2)*range(sqrt(pva$y)) ) 
+  }
+
+#if(add){
+#   lines( pme$x, pme$y+sqrt(pva$y), col=col, lwd=2 ) 
+#  }
+#  else{
+#    plot( pme$x, pme$y+sqrt(pva$y), col=col, lwd=2, bty="n", type="l",
+#      ylim=range(pme$y)+c(-vam, +vam) ) 
+#  }
+# lines(pme$x, pme$y         , col=col, lwd=5 ) 
+#lines(pme$x, pme$y-sqrt(pva$y), col=col, lwd=2 ) 
+#lines(ts, lp$fit + lp$fit.se, col=col, lwd=2) 
+# lines(ts, lp$fit - lp$fit.se, col=col, lwd=2) 
+
+}
+
+
+
+#plot principal segments from procrustes analysis
+procrustes.density.plot <- function(gpa, pc=1, factor=1, O,
+    col=rep("#000000", length(O) ), n=1000){
+
+
+  par(mar=c(5,5,5,5))
+  d = dim( gpa$mshape )
+  dir = factor* gpa$pcasd[pc] *matrix(gpa$pcar[,pc] , nrow=d[1])
+  
+  layout( t(matrix(1:9, nrow=3)) )
+  pc.segment.plot(gpa$mshape, dir, factor, pc)
+
+  xlim <- c(0, 0)
+  for(k in 1:length(O)){
+    for(i in 1:length(O[[k]]) ){
+       r <- range(O[[k]][[i]][,pc])
+       xlim[1] <-  min(xlim[1], r[1])
+       xlim[2] <-  max(xlim[2], r[2])
+    }
+  }
+
+
+  ylim <- c(0,0)
+  d <- list()
+  means <- list()
+
+  for(k in 1:length(O)){
+    d[[k]] <- list()
+    means[[k]] <- list()
+    for(i in 1:length(O[[k]]) ){
+     d[[k]][[i]] <- bkde(x=O[[k]][[i]][, pc], range.x=xlim)
+      means[[k]][[i]] <- mean(x=O[[k]][[i]][,pc])
+     ylim[2] = max(ylim[2], d[[k]][[i]]$y ) 
+    }
+  }
+
+
+  for(i in 1:length(d[[1]]) ){
+    yaxt = "n"
+    ylab = ""
+    if(i%%3==1){
+      yaxt="s"
+       ylab ="p"
+    }
+    plot( d[[1]][[i]], type="l", bty="n", lwd=2, col= col[1], xlim = xlim,
+        ylim=ylim, cex.lab=1.5, xlab=names(O[[1]])[i], ylab=ylab, cex.axis=1.5,
+        yaxt=yaxt)
+    for(k in 2:length(O)){
+      lines( d[[k]][[i]], lwd=2, col=col[k])
+    }
+    for(k in 1:length(O)){
+      abline( v=means[[k]][[i]], lwd=1, col=col[k])
+    }
+    grid(col="#00000020", lty=1)
+    abline(v=factor* gpa$pcasd[pc], col="#000000") 
+    abline(v=-factor* gpa$pcasd[pc], col="#000000")
+
+    if(i==1){
+      legend(x="topright", col=cols, bty="n", legend=fly.type, cex=1.5, lwd=2,
+        box.col="gray", bg="white")
+    }
+  }
+
+
+}
 
 
 
