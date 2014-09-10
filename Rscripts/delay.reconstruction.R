@@ -1,5 +1,4 @@
-#expects a list of data frames extract with extract.features
-#k length of markov memory
+
 delay.reconstruction <- function(X, k){
   
     n = nrow( X )
