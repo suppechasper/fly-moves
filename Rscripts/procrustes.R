@@ -334,7 +334,12 @@ procrustes.density.plot <- function(gpa, pc=1, factor=1, O,
 
 
 
+procrustes.plot.shape <- function(gpa, pcs){
+  shape = gpa$pcar[,1:length(pcs)] %*% pcs
 
+  n = length(shape)
+  plot(x=shape[1:(n/2)]+gpa$mshape[,1], y=shape[(n/2+1):n]+gpa$mshape[,2], type="l")
+}
 
 
 
