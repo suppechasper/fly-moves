@@ -16,37 +16,42 @@ flies = c("../Rscripts/WT_ACV0-files.R", "../Rscripts/Orco_ACV0-files.R", "../Rs
 fly.type = c("WT", "Orco", "IR8a1")
 delay=1
 
-O.all <- list()
-W.all <- list()
-O.names <- c()
+Slist <- list()
 
+
+fly.ids <- c()
 for(i in 1:length(flies)){
  source(flies[[i]])
 
   #extract features
   WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
-    nRuns=10, std=0.1, lT=5, uT=-1)
+    nRuns=5, std=0.1, lT=5, uT=-1)
 
   #extract segments from features
-   Slist <- extract.all.segments(WT, k=delay)
-
-  Z <- list()
-  W <- list()
-  for( j in 1:length(Slist) ){
-    Z[[j]] = cbind(Slist[[j]]$curvatureMean, Slist[[j]]$lengths)
-    W[[j]] <- rep(1/length(Z[[j]]), length(Z[[j]]))
-  }
-
-  #extracct all sgements based on odor condition
-  O <- extract.condition.odor.all(Z, Slist) 
-  names = names(O)
-
-  O.all = c(O.all,  O)
-  W.all = c(W.all,  W)
-  O.names = c(O.names, sprintf("%s-%s", fly.type[i], names))
-
+  Stmp <- extract.all.segments(WT, k=delay)
+  fly.ids <- c(fly.ids, rep(i, length(Stmp)))
+  Slist <- c(Slist, Stmp)
 
 }
+  
+build.markov.transition <- function(clusters, time, nstates=max(clusters) ){
+
+  M = matrix(0, nrow=nstates, ncol=nstates)
+  for(i in 2:length(clusters)){
+    if(time[i]-time[i-1] < 3){
+      M[clusters[i-1], clusters[i] ]  = M[clusters[i-1], clusters[i] ] + 1
+    }
+  }
+
+ for(i in 1:nrow(M)){
+    M[i, ] = M[i, ] / sum(M[i, ])
+  }
+  M[is.na(M)]  = 0
+
+#  M/length(clusters)
+  M
+}
+
 
 
 times <- c()
@@ -58,39 +63,38 @@ maxIndex = 0
 Ilist <-list()
 for(k in 1:length(Slist) ){
   Ilist[[k]] = (maxIndex+1):(maxIndex+nrow(Slist[[i]]$C)) 
-  maxIndex = maxIndex + nrow(Slist[[i]]$C)
+  maxIndex = maxIndex + nrow(Slist[[i]]$C) 
+
 }
 
-
-
-
-
+  
+nS = 6
+nC = 6
 sSeq = seq(-0.00001, 5.000001, length.out=6)
 cSeq = seq(-pi, pi, length.out=6)
 
-cluster = as.integer( cut(gpa.joint$rawscores[,pc], breaks =s ))
 
 Mbefore = list()
 Mduring = list() 
 Mafter = list()
 
+nCenters = (nS-1)*(nC-1)
 
 for(i in 1:length(Slist)){
   Stmp  = Slist[[i]]
-  cCuts = cut(Stmp$curvatureMean, cSeq)
-  sCuts = cut(Stmp$lengths, sSeq)
-  cluster = cCuts + ( (sCuts-1)*max(cCuts) + 1)
-  nCenters = max(cluster)
+  cCuts = as.integer(cut(Stmp$curvatureMean, cSeq))
+  sCuts = as.integer(cut(Stmp$lengths, sSeq))
+  cluster = cCuts + ( (sCuts-1)*(nC-1) )
 
   index = Ilist[[i]]
   time = Stmp$C$timeToOdor
   o <- order(time)
-  ind = index[ o[which(time < 0)] ]
-  Mbefore[[i]] = build.markov.transition(cluster[ind], nCenters)
-  ind = index[ o[which(time >= 0 & time < 1000)] ]
-  Mduring[[i]] = build.markov.transition(cluster[ind], nCenters)
-  ind = index[ o[which( (time-min(time)) > 10800)] ]
-  Mafter[[i]] = build.markov.transition(cluster[ind], nCenters)
+  ind =  o[which(time < 0)] 
+  Mbefore[[i]] = build.markov.transition(cluster[ind], time[ind], nCenters)
+  ind = o[which(time >= 0 & time < 1000)]
+  Mduring[[i]] = build.markov.transition(cluster[ind], time[ind], nCenters)
+  ind = o[which( (time-min(time)) > 10800)] 
+  Mafter[[i]] = build.markov.transition(cluster[ind], time[ind], nCenters)
 }
 
 
@@ -123,20 +127,16 @@ for(k in 1:length(fly.type)){
 # meanAfter[[k]] = meanAfter[[k]]/length(ind)
 }
 
-layout( matrix(1:12, nrow=3))
-  d = dim( gpa.joint$mshape )
-  dir = factor* gpa.joint$pcasd[pc] *matrix(gpa.joint$pcar[,pc] , nrow=d[1])
-  pc.segment.plot(gpa.joint$mshape, dir, factor, pc)
+layout( matrix(1:9, nrow=3))
 
 
 library(RColorBrewer)
 pal = brewer.pal(n=9, "Reds")
 ramp=colorRamp(pal)
-x = (s[1:nCenters] + s[-1]) /2
 for(k in 1:length(fly.type)){
-  image( z=t(meanBefore[[k]]), x=x, y=x, col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
-  image( z=t(meanDuring[[k]]), x=x, y=x, col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
-  image( z=t(meanAfter[[k]]), x=x, y=x, col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
+  image( z=t(meanBefore[[k]]), col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
+  image( z=t(meanDuring[[k]]), col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
+  image( z=t(meanAfter[[k]]), col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
 }
 
 
