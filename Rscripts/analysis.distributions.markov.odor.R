@@ -2,6 +2,7 @@ source("../Rscripts/extract.features.R")
 source("../Rscripts/procrustes.R")
 source("../Rscripts/transport.R")
 source("../Rscripts/delay.reconstruction.R")
+source("../Rscripts/markov.R")
 
 #to install packages uncomment:
 #install.packages("shapes")
@@ -25,7 +26,7 @@ for(i in 1:length(flies)){
 
   #extract features
   WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
-    nRuns=10, std=0.1, lT=lt, uT=-1)
+    nRuns=10, std=0.1, lT=lT, uT=-1)
 
   #extract segments from features
   Stmp <- extract.all.segments(WT, k=delay)
@@ -33,26 +34,6 @@ for(i in 1:length(flies)){
   Slist <- c(Slist, Stmp)
 
 }
-  
-build.markov.transition <- function(clusters, time, nstates=max(clusters) ){
-
-  M = matrix(0, nrow=nstates, ncol=nstates)
-  for(i in 2:length(clusters)){
-    if(time[i]-time[i-1] < 2){
-      M[clusters[i-1], clusters[i] ]  = M[clusters[i-1], clusters[i] ] + 1
-    }
-  }
-
- for(i in 1:nrow(M)){
-    M[i, ] = M[i, ] / sum(M[i, ])
-  }
-  M[is.na(M)]  = 0
-
-#  M/length(clusters)
-  M
-}
-
-
 
 times <- c()
 for(i in 1:length(Slist) ){
@@ -68,10 +49,10 @@ for(k in 1:length(Slist) ){
 }
 
   
-nS = 6
-nC = 6
-sSeq = seq(-0.00001, lT+ 0.000001, length.out=6)
-cSeq = seq(-pi, pi, length.out=6)
+nS = 12
+nC = 12
+sSeq = seq(-0.00001, lT+ 0.000001, length.out=nS)
+cSeq = seq(-pi, pi, length.out=nC)
 
 
 Mbefore = list()
@@ -179,9 +160,10 @@ for(k in 1:length(fly.type)){
   vA = vA / sum(vA)
   v = max(c(vB, vD))*2
 
-  plot(vB, ylim = c(0, v), pch=19, col="orange", xaxt="n", bty="n", ylab="P")
-  points(vD, ylim = c(0, v), pch=19, col="purple")
-  points(vA, ylim = c(0, v), pch=19, col="blue")
+  plot(vB, ylim = c(0, v), pch=19, col="orange", xaxt="n", bty="n", ylab="P",
+    cex=0.5)
+  points(vD, ylim = c(0, v), pch=19, col="purple", cex=0.5)
+  points(vA, ylim = c(0, v), pch=19, col="blue", cex=0.5)
   xSeq1 = seq(nC-0.5, (nS-1)*(nC-1), by=nC-1)
   
   abline( v=xSeq1, col="black" )

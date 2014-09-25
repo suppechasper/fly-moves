@@ -13,7 +13,8 @@
 
 #Set path to were files are located, if script is run in folder were data is
 #located the current setting will work.
-path = "~/Research/projects/vikas-fly-1/IR8a1_ACV0/orig_data/"
+#path = "~/Research/projects/vikas-fly-1/IR8a1_ACV0/orig_data/"
+path = "/ytmp/sgerber/projects/vikas/fly-data-1/fly-moves/IR8a1_ACV0/orig_data/"
 
 
 xyFiles = c(

@@ -226,11 +226,11 @@ get.outer.rim <- function(file){
 
 #extract segments of length k from all features (read from the data with above
 # methods)
-extract.all.segments <- function(features, k){
+extract.all.segments <- function(features, k, rm.jumps=k>1, offset=1 ){
   Slist = list()
   
   for(i in 1:length(features)){
-    Slist[[i]] = extract.segments(features[[i]], k) 
+    Slist[[i]] = extract.segments(X=features[[i]], k=k, rm.jumps=rm.jumps, offset=offset) 
     print(i)
   }
 
@@ -239,7 +239,7 @@ extract.all.segments <- function(features, k){
 
 
 #extract segements of length k from a single feature set X 
-extract.segments  <- function(X, k, rm.jumps=k>1){    
+extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){    
   n = length( X$lengths )
     lengths=c()
     curvature=c()
@@ -252,16 +252,17 @@ extract.segments  <- function(X, k, rm.jumps=k>1){
     rx=c()
     ry=c()
     for(j in 1:k){
-      lengths = cbind( lengths, X$lengths[j:(n-k+j)])
-        curvature = cbind( curvature, X$curvature[j:(n-k+j)])
-        curvatureMean = cbind( curvatureMean, X$curvatureMean[j:(n-k+j)])
-        dirim = cbind( dirim, X$dirim[j:(n-k+j)])
-        dorim = cbind( dorim, X$dorim[j:(n-k+j)])
-        time = cbind( time, X$time[j:(n-k+j)])
-        x= cbind( x,X$x[j:(n-k+j),1])
-        y = cbind( y,X$x[j:(n-k+j),2])
-        rx= cbind( rx,X$ris[j:(n-k+j),1])
-        ry = cbind( ry,X$ris[j:(n-k+j),2])
+      s = seq(j, n-k+j, by=offset)
+      lengths = cbind( lengths, X$lengths[s])
+        curvature = cbind( curvature, X$curvature[s])
+        curvatureMean = cbind( curvatureMean, X$curvatureMean[s])
+        dirim = cbind( dirim, X$dirim[s])
+        dorim = cbind( dorim, X$dorim[s])
+        time = cbind( time, X$time[s])
+        x= cbind( x,X$x[s,1])
+        y = cbind( y,X$x[s,2])
+        rx= cbind( rx,X$ris[s,1])
+        ry = cbind( ry,X$ris[s,2])
 
     }
 
