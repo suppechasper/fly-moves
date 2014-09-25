@@ -18,14 +18,14 @@ delay=1
 
 Slist <- list()
 
-
+lT=4
 fly.ids <- c()
 for(i in 1:length(flies)){
  source(flies[[i]])
 
   #extract features
   WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
-    nRuns=5, std=0.1, lT=5, uT=-1)
+    nRuns=10, std=0.1, lT=lt, uT=-1)
 
   #extract segments from features
   Stmp <- extract.all.segments(WT, k=delay)
@@ -38,7 +38,7 @@ build.markov.transition <- function(clusters, time, nstates=max(clusters) ){
 
   M = matrix(0, nrow=nstates, ncol=nstates)
   for(i in 2:length(clusters)){
-    if(time[i]-time[i-1] < 3){
+    if(time[i]-time[i-1] < 2){
       M[clusters[i-1], clusters[i] ]  = M[clusters[i-1], clusters[i] ] + 1
     }
   }
@@ -70,7 +70,7 @@ for(k in 1:length(Slist) ){
   
 nS = 6
 nC = 6
-sSeq = seq(-0.00001, 5.000001, length.out=6)
+sSeq = seq(-0.00001, lT+ 0.000001, length.out=6)
 cSeq = seq(-pi, pi, length.out=6)
 
 
@@ -131,12 +131,69 @@ layout( matrix(1:9, nrow=3))
 
 
 library(RColorBrewer)
-pal = brewer.pal(n=9, "Reds")
+pal = c("#FFFFFF", brewer.pal(n=9, "Reds")[2:9])
 ramp=colorRamp(pal)
+cols = rgb(ramp( ((1:200)-1)/199)/255)
+
+palD = rev(brewer.pal(n=9, "RdBu"))[c(1,2,3,3,5,7,7,8,9)]
+rampD=colorRamp(palD)
+colsD = rgb(rampD( ((1:200)-1)/199)/255)
+
 for(k in 1:length(fly.type)){
-  image( z=t(meanBefore[[k]]), col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
-  image( z=t(meanDuring[[k]]), col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
-  image( z=t(meanAfter[[k]]), col=rgb(ramp( ((1:101)-1)/100)/255), asp=1 )
+  off = 0.5/(nCenters+1)
+  image( z=t(meanBefore[[k]]), col=cols, asp=1, zlim=c(0,1),
+      bty="n", xaxt="n", yaxt="n")
+ abline(v=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
+ abline(h=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
+ abline(v=seq(-off,1+off, length.out=nS), col="black", lty=1)
+ abline(h=seq(-off,1+off, length.out=nS), col="black", lty=1)
+ title(sprintf("Transitions %s Before Odor", fly.type[k] ))
+
+  image( z=t(meanDuring[[k]]), col=cols, asp=1 , zlim=c(0,1), bty="n", xaxt="n",
+      yaxt="n")
+ abline(v=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
+ abline(h=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
+ abline(v=seq(-off,1+off, length.out=nS), col="black", lty=1)
+ abline(h=seq(-off,1+off, length.out=nS), col="black", lty=1)
+  
+ title(sprintf("Transitions %s During Odor", fly.type[k] ))
+  
+#      yaxt="n")
+#image( z=t(meanBefore[[k]] - meanDuring[[k]]), col=colsD, asp=1 ,
+#zlim=c(-1,1), bty="n", xaxt="n", yaxt="n")
+# abline(v=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
+# abline(h=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
+# abline(v=seq(-off,1+off, length.out=nS), col="black", lty=1)
+# abline(h=seq(-off,1+off, length.out=nS), col="black", lty=1)
+#  image( z=t(meanAfter[[k]]), col=cols, asp=1 , zlim=c(0,1), bty="n", xaxt="n",
+  
+  eB = eigen(t(meanBefore[[k]]))
+  eD = eigen(t(meanDuring[[k]]))
+  eA = eigen(t(meanAfter[[k]]))
+
+  vB = abs( Re(eB$vector[, 1]) )
+  vB = vB / sum(vB)
+  vD = abs( Re(eD$vector[, 1]) )
+  vD = vD / sum(vD)
+  vA = abs( Re(eA$vector[, 1]) )
+  vA = vA / sum(vA)
+  v = max(c(vB, vD))*2
+
+  plot(vB, ylim = c(0, v), pch=19, col="orange", xaxt="n", bty="n", ylab="P")
+  points(vD, ylim = c(0, v), pch=19, col="purple")
+  points(vA, ylim = c(0, v), pch=19, col="blue")
+  xSeq1 = seq(nC-0.5, (nS-1)*(nC-1), by=nC-1)
+  
+  abline( v=xSeq1, col="black" )
+  text( x=xSeq1-0.3, y=0.9*v, labels=sprintf("speed %.2f",sSeq[2:(length(sSeq)-1)]), srt=90 )
+  
+  xSeq2 = seq( nC/2, (nS-1)*(nC-1), by=nC-1)
+  abline( v=xSeq2, col="gray" )
+  text( x=xSeq2-0.3, y=0.9*v, labels="curvature -", srt=90 )
+  text( x=xSeq2+0.2, y=0.9*v, labels="curvature +", srt=90 )
+
+  title(sprintf("Stationary distributions %s (orange= before, purple = during, blue=after)", fly.type[k] ))
+   
 }
 
 
