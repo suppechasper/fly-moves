@@ -350,18 +350,43 @@ extract.condition.odor <- function(X, C){
   Xbefore = X[C$maxOdor == 1, ]
   nb = nrow(Xbefore)
   nbs = nb/2
-  
+  if(nbs == 0){
+    Xbefore1 = Xbefore
+    Xbefore2 = Xbefore
+  }
+  else{
+    Xbefore1 = Xbefore[1:nbs, ];
+    Xbefore2 = Xbefore[(nbs+1):nb, ]
+  }
+
   Xduring = X[C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4, ]
   nd = nrow(Xduring)
   nds = nd/2
-
+  if(nds == 0){
+    Xduring1 = Xduring
+    Xduring2 = Xduring
+  }
+  else{
+    Xduring1 = Xduring[1:nds, ]
+    Xduring2 = Xduring[(nds+1):nd, ]
+  }
+ 
   Xafter = X[C$maxOdor == 5, ]
   na = nrow(Xafter)
   nas = na/2
+  if(nas == 0){
+    Xafter1 = Xafter
+    Xafter2 = Xafter
+  }
+  else{
+    Xafter1 = Xafter[1:nas, ]
+    Xafter2 = Xafter[(nas+1):na, ] 
+  }
 
-  list( Xbefore1 = Xbefore[1:nbs, ], Xbefore2 = Xbefore[(nbs+1):nb, ],
-        Xduring1 = Xduring[1:nds, ], Xduring2 = Xduring[(nds+1):nd, ],
-        Xafter1 = Xafter[1:nas, ], Xafter2 = Xafter[(nas+1):na, ] )
+
+  list( Xbefore1 = Xbefore1, Xbefore2 = Xbefore2,
+        Xduring1 = Xduring1, Xduring2 = Xduring2,
+        Xafter1 = Xafter1, Xafter2 = Xafter2 )
 
 }
 
@@ -378,6 +403,7 @@ extract.condition.odor.all <- function(Xlist, Slist){
   Xafter2 = c()
 
   for(i in 1:length(Xlist) ){
+    print(i)
     res = extract.condition.odor( Xlist[[i]], Slist[[i]]$C )
     Xbefore1 = rbind(Xbefore1, res$Xbefore1)
     Xbefore2 = rbind(Xbefore2, res$Xbefore2)

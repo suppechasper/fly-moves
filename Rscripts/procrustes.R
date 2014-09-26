@@ -268,6 +268,7 @@ procrustes.time.plot <- function(gpa, pc=1, factor=1, Z, times, ncuts=501,
 procrustes.density.plot <- function(gpa, pc=1, factor=1, O,
     col=rep("#000000", length(O) ), n=1000){
 
+  library(KernSmooth)
 
   par(mar=c(5,5,5,5))
   d = dim( gpa$mshape )

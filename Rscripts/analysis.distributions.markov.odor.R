@@ -72,7 +72,7 @@ for(i in 1:length(Slist)){
   o <- order(time)
   ind =  o[which(time < 0)] 
   Mbefore[[i]] = build.markov.transition(cluster[ind], time[ind], nCenters)
-  ind = o[which(time >= 0 & time < 1000)]
+  ind = o[which(time >= 0 & time < 2500)]
   Mduring[[i]] = build.markov.transition(cluster[ind], time[ind], nCenters)
   ind = o[which( (time-min(time)) > 10800)] 
   Mafter[[i]] = build.markov.transition(cluster[ind], time[ind], nCenters)
@@ -112,7 +112,7 @@ layout( matrix(1:9, nrow=3))
 
 
 library(RColorBrewer)
-pal = c("#FFFFFF", brewer.pal(n=9, "Reds")[2:9])
+pal = c("#FFFFFF", brewer.pal(n=9, "Reds")[4:9])
 ramp=colorRamp(pal)
 cols = rgb(ramp( ((1:200)-1)/199)/255)
 
@@ -124,16 +124,16 @@ for(k in 1:length(fly.type)){
   off = 0.5/(nCenters+1)
   image( z=t(meanBefore[[k]]), col=cols, asp=1, zlim=c(0,1),
       bty="n", xaxt="n", yaxt="n")
- abline(v=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
- abline(h=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
+ abline(v=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="lightgray", lty=3)
+ abline(h=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="lightgray", lty=3)
  abline(v=seq(-off,1+off, length.out=nS), col="black", lty=1)
  abline(h=seq(-off,1+off, length.out=nS), col="black", lty=1)
  title(sprintf("Transitions %s Before Odor", fly.type[k] ))
 
   image( z=t(meanDuring[[k]]), col=cols, asp=1 , zlim=c(0,1), bty="n", xaxt="n",
       yaxt="n")
- abline(v=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
- abline(h=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="gray", lty=3)
+ abline(v=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="lightgray", lty=3)
+ abline(h=seq(-off,1+off, length.out=(nS-1)*(nC-1)+1), col="lightgray", lty=3)
  abline(v=seq(-off,1+off, length.out=nS), col="black", lty=1)
  abline(h=seq(-off,1+off, length.out=nS), col="black", lty=1)
   
@@ -161,9 +161,9 @@ for(k in 1:length(fly.type)){
   v = max(c(vB, vD))*2
 
   plot(vB, ylim = c(0, v), pch=19, col="orange", xaxt="n", bty="n", ylab="P",
-    cex=0.5)
-  points(vD, ylim = c(0, v), pch=19, col="purple", cex=0.5)
-  points(vA, ylim = c(0, v), pch=19, col="blue", cex=0.5)
+    cex=0.7)
+  points(vD, ylim = c(0, v), pch=19, col="purple", cex=0.7)
+  points(vA, ylim = c(0, v), pch=19, col="blue", cex=0.7)
   xSeq1 = seq(nC-0.5, (nS-1)*(nC-1), by=nC-1)
   
   abline( v=xSeq1, col="black" )

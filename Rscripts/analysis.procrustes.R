@@ -7,11 +7,13 @@ source("../Rscripts/delay.reconstruction.R")
 #install.packages("shapes")
 #install.packages("abind")
 #install.packages("circular")
+#install.packages("KernSMooth")
 
 #load WT file names, adjust path in WT_ACV0-files.R tp point to the correct
 #directoty. To convert .mat files (rim information files) to csv use
 #rim-mat-2-csv.m in OctaveScripts (should be compatible with Matlab
-seg.len <- 20
+seg.len <- 50
+offset <- 25
 flies <- c("../Rscripts/WT_ACV0-files.R", "../Rscripts/Orco_ACV0-files.R", "../Rscripts/IR8a1_ACV0-files.R")
 fly.type <- c("WT", "Orco", "IR8a1")
 
@@ -24,10 +26,10 @@ for(k in 1:length(flies)){
 
   #extract features
   WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
-    nRuns=10, lT=5, uT=0.1)
+    nRuns=1, lT=5, uT=0.1)
 
   #extract segments from features
-  Stmp <- extract.all.segments(WT, k=seg.len)
+  Stmp <- extract.all.segments(WT, k=seg.len, offset=offset)
  
   fly.ids <- c(fly.ids, rep(k, length(Stmp)))
 
