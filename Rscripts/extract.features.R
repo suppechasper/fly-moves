@@ -391,60 +391,79 @@ extract.condition.odor <- function(X, C){
 }
 
 
-
-
 extract.condition.odor.all <- function(Xlist, Slist){
 
-  Xbefore1 = c()
-  Xbefore2 = c()
-  Xduring1 = c()
-  Xduring2 = c()
-  Xafter1 = c()
-  Xafter2 = c()
+
+  ans = NULL
 
   for(i in 1:length(Xlist) ){
     print(i)
     res = extract.condition.odor( Xlist[[i]], Slist[[i]]$C )
-    Xbefore1 = rbind(Xbefore1, res$Xbefore1)
-    Xbefore2 = rbind(Xbefore2, res$Xbefore2)
-    Xduring1 = rbind(Xduring1, res$Xduring1)
-    Xduring2 = rbind(Xduring2, res$Xduring2)
-    Xafter1  = rbind(Xafter1, res$Xafter1)
-    Xafter2  = rbind(Xafter2, res$Xafter2)
+    if( is.null(ans) ){
+      ans = res
+    }
+    else{
+      for(i in 1:length(res)){
+        ans[[i]] = rbind(ans[[i]], res[[i]])
+      }
+    }
   }
 
-  list(Xbefore1 = Xbefore1, Xbefore2 = Xbefore2, 
-       Xduring1 = Xduring1, Xduring2 = Xduring2, 
-       Xafter1 = Xafter1, Xafter2 = Xafter2)
-
+  ans
 }
 
 
 
 
 
-extract.condition.odor.all.list <- function(Xlist, Slist){
 
 
-  O <- list()
-  index = 1
+
+
+#Extract based on inside outside and odor period
+extract.condition.odor.in.out <- function(X, C){
+
+ 
+  BeforeInner = X[C$maxOdor == 1 & C$maxPos == 3, ]
+  BeforeMiddle = X[C$maxOdor == 1 & C$maxPos == 2, ]
+  BeforeOuter = X[C$maxOdor == 1 & C$maxPos == 1, ]
+  DuringInner = X[ (C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4 ) & C$maxPos == 3, ]
+  DuringMiddle = X[ (C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4 ) & C$maxPos == 2, ]
+  DuringOuter = X[ (C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4 ) & C$maxPos == 1, ]
+  AfterInner = X[C$maxOdor == 5 & C$maxPos == 3, ]
+  AfterMiddle = X[C$maxOdor == 5 & C$maxPos == 2, ]
+  AfterOuter = X[C$maxOdor == 5 & C$maxPos == 1, ]
+  
+  res = list(BeforeInner, BeforeMiddle, BeforeOuter, DuringInner, DuringMiddle,
+      DuringOuter, AfterInner, AfterMiddle, AfterOuter)
+  res
+}
+
+
+
+
+
+extract.condition.odor.in.out.all <- function(Xlist, Slist){
+
+
+  ans =NULL
+
   for(i in 1:length(Xlist) ){
-    res = extract.condition.odor( Xlist[[i]], Slist[[i]]$C )
-    O[[index]] = res$Xbefore1;
-    index = index +1
-    O[[index]] = res$Xbefore2;
-    index = index +1
-    O[[index]] = res$Xduring1;
-    index = index +1
-    O[[index]] = res$Xduring2;
-    index = index +1
-    O[[index]] = res$Xafter1;
-    index = index +1
-    O[[index]] = res$Xafter2;
-    index = index +1
+    print(i)
+    res = extract.condition.odor.in.out( Xlist[[i]], Slist[[i]]$C )
+    if( is.null(ans) ){
+      ans = res
+    }
+    else{
+      for(i in 1:length(res)){
+        ans[[i]] = rbind(ans[[i]], res[[i]])
+      }
+    }
   }
 
-  O
+  ans
 }
+
+
 
 

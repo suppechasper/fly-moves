@@ -25,7 +25,7 @@ for(i in 1:length(flies)){
 
   #extract features
   WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
-    nRuns=10, std=0.1, lT=5, uT=-1)
+    nRuns=1, std=0.1, lT=5, uT=-1)
 
   #extract segments from features
    Slist <- extract.all.segments(WT, k=delay)
@@ -38,7 +38,7 @@ for(i in 1:length(flies)){
   }
 
   #extracct all sgements based on odor condition
-  O <- extract.condition.odor.all(Z, Slist) 
+  O <- extract.condition.odor.in.out.all(Z, Slist) 
   names = names(O)
 
   O.all = c(O.all,  O)
@@ -70,75 +70,82 @@ xs = seq(-3.2, 3.2, length.out=16)
 ys= seq(0,5, length.out=16)
 
 
-periods <- c("Before 1", "Before 2", "During 1", "During 2", "After 1", "After 2")
+periods <- c("BeforeInner", "BeforeMiddle", "BeforeOuter", "DuringInner",
+    "DuringMiddle", "DuringOuter", "AfterInner", "AfterMiddle", "AfterOuter")
+
 
 for(tp  in c(T, F)){
   for(uc in c(T, F)){
-transparency = tp
-useCost = uc
-lwd= 16
-if(transparency){
-  lwd=6
-}
 
-
-for(i in 1:5){
-  for(j in (i+1):6){  
-
-    index1= pid[i, j]
-    index2= pid[i+6, j+6]
-    index3= pid[i+12, j+12]
-    
-    map1 = trp$plans[[index1]]$trp$map[[length(trp$plans[[index1]]$trp$cost) ]]
-    map2 = trp$plans[[index2]]$trp$map[[length(trp$plans[[index2]]$trp$cost) ]]
-    map3 = trp$plans[[index3]]$trp$map[[length(trp$plans[[index3]]$trp$cost) ]]
-
-    maxW = max(max(map1[,3]), max(map2[,3]), max(map3[,3]))
-    maxC = max(max(map1[,3]*map1[,4]), max(map2[,3]*map2[,4]),
-         max(map3[,3]*map3[,4]))
-
-    tmp = plot.binnned.transport.map(trp$plans[[index1]]$trp, xs, ys, col=cols[1],
-      lwd=lwd, cex.axis=1.5, cex.lab=1.5, useTransparancy=transparency,
-      useCost=useCost, maxW=maxW, maxC=maxC)
-
-    tmp = plot.binnned.transport.map(trp$plans[[index2]]$trp, xs, ys, col=cols[2],
-        add=T, lwd=lwd, cex.axis=1.5, cex.lab=1.5, useTransparancy=transparency,
-        useCost=useCost, maxW=maxW, maxC=maxC)
-
-    tmp = plot.binnned.transport.map(trp$plans[[index3]]$trp, xs, ys,
-        col=cols[3], add=T, lwd=lwd, cex.axis=1.5, cex.lab=1.5,
-        useTransparancy=transparency, useCost=useCost, maxW=maxW, maxC=maxC)
-
-    legend(x="topleft", col=cols, bty="n", legend=fly.type, cex=1.5, lwd=4,
-        box.col="gray", bg="white")
-    title( sprintf("%s to %s", periods[i], periods[j]) )
-
-    if(transparency){
-      if(useCost){
-    dev.copy2pdf(file= sprintf("distributions-delay-%d-trptc-%s-to-%s.pdf", delay,
-          periods[i], periods[j]) )
+    transparency = tp
+      useCost = uc
+      lwd= 16
+      if(transparency){
+        lwd=6
       }
-      else{
 
-    dev.copy2pdf(file= sprintf("distributions-delay-%d-trpt-%s-to-%s.pdf", delay,
-          periods[i], periods[j]) )
-      } 
-    }
-    else{
-      if(useCost){
-    dev.copy2pdf(file= sprintf("distributions-delay-%d-trpc-%s-to-%s.pdf", delay,
-          periods[i], periods[j]) ) 
+
+    nperiods = length(nperiods)
+
+      for(i in 1:(nperiods-1)){
+        for(j in (i+1):nperiods){  
+
+
+          index1= pid[i, j]
+            index2= pid[i + nperiods, j + nperiods]
+            index3= pid[i+2*nperiods, j + 2*nperiods]
+
+            map1 = trp$plans[[index1]]$trp$map[[length(trp$plans[[index1]]$trp$cost) ]]
+            map2 = trp$plans[[index2]]$trp$map[[length(trp$plans[[index2]]$trp$cost) ]]
+            map3 = trp$plans[[index3]]$trp$map[[length(trp$plans[[index3]]$trp$cost) ]]
+
+            maxW = max(max(map1[,3]), max(map2[,3]), max(map3[,3]))
+            maxC = max(max(map1[,3]*map1[,4]), max(map2[,3]*map2[,4]),
+                max(map3[,3]*map3[,4]))
+
+            tmp = plot.binnned.transport.map(trp$plans[[index1]]$trp, xs, ys, col=cols[1],
+                lwd=lwd, cex.axis=1.5, cex.lab=1.5, useTransparancy=transparency,
+                useCost=useCost, maxW=maxW, maxC=maxC)
+
+            tmp = plot.binnned.transport.map(trp$plans[[index2]]$trp, xs, ys, col=cols[2],
+                add=T, lwd=lwd, cex.axis=1.5, cex.lab=1.5, useTransparancy=transparency,
+                useCost=useCost, maxW=maxW, maxC=maxC)
+
+            tmp = plot.binnned.transport.map(trp$plans[[index3]]$trp, xs, ys,
+                col=cols[3], add=T, lwd=lwd, cex.axis=1.5, cex.lab=1.5,
+                useTransparancy=transparency, useCost=useCost, maxW=maxW, maxC=maxC)
+
+            legend(x="topleft", col=cols, bty="n", legend=fly.type, cex=1.5, lwd=4,
+                box.col="gray", bg="white")
+            title( sprintf("%s to %s", periods[i], periods[j]) )
+
+            if(transparency){
+              if(useCost){
+                dev.copy2pdf(file= sprintf("distributions-delay-%d-trptc-%s-to-%s.pdf", delay,
+                      periods[i], periods[j]) )
+              }
+              else{
+
+                dev.copy2pdf(file= sprintf("distributions-delay-%d-trpt-%s-to-%s.pdf", delay,
+                      periods[i], periods[j]) )
+              } 
+            }
+            else{
+              if(useCost){
+                dev.copy2pdf(file= sprintf("distributions-delay-%d-trpc-%s-to-%s.pdf", delay,
+                      periods[i], periods[j]) ) 
+              }
+              else{  
+                dev.copy2pdf(file= sprintf("distributions-delay-%d-trp-%s-to-%s.pdf", delay,
+                      periods[i], periods[j]) ) 
+              }
+            }
+        }
       }
-      else{  
-    dev.copy2pdf(file= sprintf("distributions-delay-%d-trp-%s-to-%s.pdf", delay,
-          periods[i], periods[j]) ) 
-      }
-    }
- }
+
+  }
 }
 
-}
-}
 
 #plot distributions
 

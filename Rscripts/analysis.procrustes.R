@@ -60,7 +60,7 @@ pca <- list()
 for(k in 1:3){
 
     ind = which(fly.ids==k)
-    O[[k]] <- extract.condition.odor.all(Z[ind], Slist[ind]) 
+    O[[k]] <- extract.condition.odor.in.out.all(Z[ind], Slist[ind]) 
     pca[[k]] = list()
     for( i in 1:length(O[[k]])){
        pca[[k]][[i]] = prcomp(O[[k]][[i]])

@@ -1,19 +1,20 @@
 #--- Pairwise optimal transport ---#
 
 
-#Pairwise Wassertien distance for list of matrices in Xin
+#Pairwise Wasserstein distance for list of matrices in Xin
 pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
     p=2, lambda=0, oType=26, rFactor=2, stop=6, split=1, sType=0,
     weight=as.list(rep(1, length(Xin))) ){
 
 
-  library(mop)
-  library(pdist)
+  library( gmra )
+  library( mop )
+  library( pdist )
 
 
   if( nrow(Xin[[1]]) > 200){
 
-  gmra <- c()
+  gmra <- list()
  
   indices = c()
   for(i in 1:length(Xin)){
@@ -21,7 +22,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
     if(!is.null(nr)){
       if( nr > 0){
 
-        gmra <- c(gmra, multiscale.transport.create.ipca(X=Xin[[i]], d=d,
+        gmra <- c(gmra, gmra.create.ipca(X=Xin[[i]], d=d,
             eps=eps, t=0.9, split=split, stop=stop) )
         indices = c(indices, i)
       }
@@ -38,7 +39,7 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
   for(i in 1:(length(gmra)-1)){
     for(j in (i+1):length(gmra)){
 
-      trp = multiscale.transport.id(gmra1=gmra[i], gmra2 = gmra[j], p=p,
+      trp = multiscale.transport(gmra1=gmra[[i]], gmra2 = gmra[[j]], p=p,
           scale1=scale, scale2=scale, matchScale=FALSE, rFactor=rFactor,
           sType=sType, lambda=lambda, oType=oType, w1=weight[[i]], w2=weight[[j]])
         
@@ -59,10 +60,6 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
   }
 
   
-    for(i in gmra){
-      multiscale.transport.delete(i)
-    }
-
   res = list(D = dist, plans= plans)
 
   }
