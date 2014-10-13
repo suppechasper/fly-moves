@@ -15,17 +15,19 @@ source("../Rscripts/delay.reconstruction.R")
 flies = c("../Rscripts/WT_ACV0-files.R", "../Rscripts/Orco_ACV0-files.R", "../Rscripts/IR8a1_ACV0-files.R")
 fly.type = c("WT", "Orco", "IR8a1")
 delay=1
+standardize=TRUE
 
 O.all <- list()
 W.all <- list()
 O.names <- c()
+
 
 for(i in 1:length(flies)){
  source(flies[[i]])
 
   #extract features
   WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
-    nRuns=1, std=0.1, lT=5, uT=-1)
+    nRuns=10, std=0.1, lT=5, uT=-1)
 
   #extract segments from features
    Slist <- extract.all.segments(WT, k=delay)
@@ -34,6 +36,9 @@ for(i in 1:length(flies)){
   W <- list()
   for( j in 1:length(Slist) ){
     Z[[j]] = cbind(Slist[[j]]$curvatureMean, Slist[[j]]$lengths)
+    if(standardize){
+      Z[[j]] = t( scale( t(Z[[j]]) ) )
+    }
     W[[j]] <- rep(1/length(Z[[j]]), length(Z[[j]]))
   }
 
@@ -53,7 +58,7 @@ for(i in 1:length(flies)){
 
 
 trp <- pairwise.transport(Xin = O.all, eps=0.0001, scale=-1, d=2, store.plan=T,
-    p=2, lambda=0.3, oType=26, weight=W.all)
+    p=2, lambda=0, oType=26, weight=W.all)
 
 
 #Plot some transport plans

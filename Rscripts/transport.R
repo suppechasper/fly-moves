@@ -17,13 +17,15 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
   gmra <- list()
  
   indices = c()
+  index = 1
   for(i in 1:length(Xin)){
     nr = nrow(Xin[[i]])
     if(!is.null(nr)){
       if( nr > 0){
 
-        gmra <- c(gmra, gmra.create.ipca(X=Xin[[i]], d=d,
-            eps=eps, t=0.9, split=split, stop=stop) )
+        print(i)
+        gmra[[index]] <- gmra.create.ipca(X=Xin[[i]], d=d, eps=eps, t=0.9, split=split, stop=stop) 
+        index = index +1
         indices = c(indices, i)
       }
     }
@@ -38,7 +40,6 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
   count = 1;
   for(i in 1:(length(gmra)-1)){
     for(j in (i+1):length(gmra)){
-
       trp = multiscale.transport(gmra1=gmra[[i]], gmra2 = gmra[[j]], p=p,
           scale1=scale, scale2=scale, matchScale=FALSE, rFactor=rFactor,
           sType=sType, lambda=lambda, oType=oType, w1=weight[[i]], w2=weight[[j]])
