@@ -67,6 +67,8 @@ procrustes.extract.rawscores.joint <-function(gpa, Slist, coords =
   Z
 } 
 
+
+
 procrustes.extract.tangent.joint <-function(gpa, Slist){
   
   Z = list()
@@ -79,6 +81,8 @@ procrustes.extract.tangent.joint <-function(gpa, Slist){
 
   Z
 } 
+
+
 
 procrustes.extract.rotated.joint <-function(gpa, Slist){
   
@@ -96,6 +100,9 @@ procrustes.extract.rotated.joint <-function(gpa, Slist){
 
   Z
 }
+
+
+
 
 procrustes.extract.stdscores.joint <-function(gpa, Slist){  
   
@@ -127,6 +134,9 @@ procrustes.plot <- function(gpa, pc=1, factor=1){
   pc.segment.plot(gpa$mshape, dir, factor, pc)
 
 }
+
+
+
 
 pc.segment.plot.vectorize <- function(pca, dim, factor, pc){
   mean = matrix(pca$center , nrow=dim)
@@ -211,6 +221,9 @@ procrustes.qq.plot <- function(gpa, pc=1, factor=1, O, n=1000){
   abline(0,1, col="red")
 
 }
+
+
+
 
 #plot principal segments from procrustes analysis
 procrustes.time.plot <- function(gpa, pc=1, factor=1, Z, times, ncuts=501,

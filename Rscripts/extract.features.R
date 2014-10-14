@@ -434,8 +434,10 @@ extract.condition.odor.in.out <- function(X, C){
   AfterMiddle = X[C$maxOdor == 5 & C$maxPos == 2, ]
   AfterOuter = X[C$maxOdor == 5 & C$maxPos == 1, ]
   
-  res = list(BeforeInner, BeforeMiddle, BeforeOuter, DuringInner, DuringMiddle,
-      DuringOuter, AfterInner, AfterMiddle, AfterOuter)
+  res = list(BeforInner = BeforeInner, BeforeMiddle = BeforeMiddle, BeforeOuter
+      = BeforeOuter, DuringInner = DuringInner, DuringMiddle = DuringMiddle,
+      DuringOuter = DuringOuter, AfterInner = AfterInner, AfterMiddle =
+      AfterMiddle, AfterOuter =AfterOuter)
   res
 }
 

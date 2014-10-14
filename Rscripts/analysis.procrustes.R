@@ -68,7 +68,7 @@ for(k in 1:3){
 }
 
 
-
+library(RColorBrewer)
 cols = brewer.pal(name="Dark2", n=3)
 
 
@@ -86,6 +86,8 @@ for(i in 1:10){
   dev.copy2pdf( file=sprintf("segments-len-%d-density-plot-pc-%d.pdf", seg.len, i) )
 
 }
+
+
 
 
 
@@ -114,14 +116,14 @@ for(pc in 1:10){
         xlim = range(mean[,1]) + range(dir[,1])
         ylim = range(mean[,2]) + range(dir[,2])
         if(k==1){  
-          plot(mean +s*dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
-             ylab="", cex.axis=2, cex=2, col=colsa[k], type="l", lwd=5)
+          plot( mean +s*dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
+                ylab="", cex.axis=2, cex=2, col=colsa[k], type="l", lwd=5)
           points((mean +s* dir)[2:n, ], pch=19, col=colsa[k],cex=2)
           title(sprintf("Mean %d sd * PC %d", s*factor, pc), cex.main=2)
         }
         else{
-          lines(mean + s* dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
-             ylab="", cex.axis=2, cex=2, col=colsa[k], type="l", lwd=5)
+          lines( mean + s* dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
+                 ylab="", cex.axis=2, cex=2, col=colsa[k], type="l", lwd=5)
           points((mean +s* dir)[2:n, ], pch=19, col=colsa[k],cex=2)
         }
       }
@@ -131,8 +133,7 @@ for(pc in 1:10){
     }
 
 
- dev.copy2pdf(file= sprintf("segments-len-%d-pc-%d.pdf",
-         seg.len, pc)) 
+    dev.copy2pdf(file= sprintf("segments-len-%d-pc-%d.pdf", seg.len, pc)) 
 
 }
 

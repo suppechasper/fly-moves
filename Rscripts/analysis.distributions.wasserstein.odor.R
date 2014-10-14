@@ -37,18 +37,19 @@ for(i in 1:length(flies)){
   for( j in 1:length(Slist) ){
     Z[[j]] = cbind(Slist[[j]]$curvatureMean, Slist[[j]]$lengths)
     if(standardize){
-      Z[[j]] = t( scale( t(Z[[j]]) ) )
+      Z[[j]] = scale( Z[[j]] )
     }
     W[[j]] <- rep(1/length(Z[[j]]), length(Z[[j]]))
   }
 
   #extracct all sgements based on odor condition
   O <- extract.condition.odor.in.out.all(Z, Slist) 
-  names = names(O)
+  names = names( O )
+  nperiods = length( names );
 
   O.all = c(O.all,  O)
   W.all = c(W.all,  W)
-  O.names = c(O.names, sprintf("%s-%s", fly.type[i], names))
+  O.names = c( O.names, sprintf("%s-%s", fly.type[i], names) )
 
 
 }
@@ -65,19 +66,17 @@ trp <- pairwise.transport(Xin = O.all, eps=0.0001, scale=-1, d=2, store.plan=T,
 pid = matrix(NA, nrow=length(O.names), ncol=length(O.names) )
 
 for(i in 1:length(trp$plans)){
-  pid[trp$plans[[i]]$i, trp$plans[[i]]$j ] =  i
-  pid[trp$plans[[i]]$j, trp$plans[[i]]$i ] =  i
+  pid[ trp$plans[[i]]$i, trp$plans[[i]]$j ] =  i
+  pid[ trp$plans[[i]]$j, trp$plans[[i]]$i ] =  i
 } 
 
 
+
+
+library(RColorBrewer)
 cols = brewer.pal(name="Dark2", n=3)
 xs = seq(-3.2, 3.2, length.out=16)
 ys= seq(0,5, length.out=16)
-
-
-periods <- c("BeforeInner", "BeforeMiddle", "BeforeOuter", "DuringInner",
-    "DuringMiddle", "DuringOuter", "AfterInner", "AfterMiddle", "AfterOuter")
-
 
 for(tp  in c(T, F)){
   for(uc in c(T, F)){
@@ -90,59 +89,59 @@ for(tp  in c(T, F)){
       }
 
 
-    nperiods = length(nperiods)
 
       for(i in 1:(nperiods-1)){
         for(j in (i+1):nperiods){  
 
 
-          index1= pid[i, j]
-            index2= pid[i + nperiods, j + nperiods]
-            index3= pid[i+2*nperiods, j + 2*nperiods]
+            index1= pid[i, j]
+            index2= pid[ i + nperiods, j + nperiods   ]
+            index3= pid[ i+2*nperiods, j + 2*nperiods ]
 
-            map1 = trp$plans[[index1]]$trp$map[[length(trp$plans[[index1]]$trp$cost) ]]
-            map2 = trp$plans[[index2]]$trp$map[[length(trp$plans[[index2]]$trp$cost) ]]
-            map3 = trp$plans[[index3]]$trp$map[[length(trp$plans[[index3]]$trp$cost) ]]
+            map1 = trp$plans[[ index1 ]]$trp$map[[ length(trp$plans[[index1]]$trp$cost) ]]
+            map2 = trp$plans[[ index2 ]]$trp$map[[ length(trp$plans[[index2]]$trp$cost) ]]
+            map3 = trp$plans[[ index3 ]]$trp$map[[ length(trp$plans[[index3]]$trp$cost) ]]
 
-            maxW = max(max(map1[,3]), max(map2[,3]), max(map3[,3]))
-            maxC = max(max(map1[,3]*map1[,4]), max(map2[,3]*map2[,4]),
-                max(map3[,3]*map3[,4]))
+            maxW = max( max(map1[,3]), max(map2[,3]), max(map3[,3]) )
+            maxC = max( max(map1[,3]*map1[,4]), max(map2[,3]*map2[,4]),
+                        max(map3[,3]*map3[,4]) )
 
-            tmp = plot.binnned.transport.map(trp$plans[[index1]]$trp, xs, ys, col=cols[1],
+            tmp = plot.binnned.transport.map( trp$plans[[index1]]$trp, xs, ys, col=cols[1],
                 lwd=lwd, cex.axis=1.5, cex.lab=1.5, useTransparancy=transparency,
-                useCost=useCost, maxW=maxW, maxC=maxC)
+                useCost=useCost, maxW=maxW, maxC=maxC )
 
-            tmp = plot.binnned.transport.map(trp$plans[[index2]]$trp, xs, ys, col=cols[2],
+            tmp = plot.binnned.transport.map( trp$plans[[index2]]$trp, xs, ys, col=cols[2],
                 add=T, lwd=lwd, cex.axis=1.5, cex.lab=1.5, useTransparancy=transparency,
-                useCost=useCost, maxW=maxW, maxC=maxC)
+                useCost=useCost, maxW=maxW, maxC=maxC )
 
-            tmp = plot.binnned.transport.map(trp$plans[[index3]]$trp, xs, ys,
-                col=cols[3], add=T, lwd=lwd, cex.axis=1.5, cex.lab=1.5,
-                useTransparancy=transparency, useCost=useCost, maxW=maxW, maxC=maxC)
+            tmp = plot.binnned.transport.map( trp$plans[[index3]]$trp, xs, ys, col=cols[3], 
+                add=T, lwd=lwd, cex.axis=1.5, cex.lab=1.5, useTransparancy=transparency, 
+                useCost=useCost, maxW=maxW, maxC=maxC )
 
-            legend(x="topleft", col=cols, bty="n", legend=fly.type, cex=1.5, lwd=4,
-                box.col="gray", bg="white")
-            title( sprintf("%s to %s", periods[i], periods[j]) )
+            legend( x="topleft", col=cols, bty="n", legend=fly.type, cex=1.5, lwd=4,
+                box.col="gray", bg="white" )
 
-            if(transparency){
+            title( sprintf("%s to %s", names[i], names[j]) )
+
+            if( transparency ){
               if(useCost){
-                dev.copy2pdf(file= sprintf("distributions-delay-%d-trptc-%s-to-%s.pdf", delay,
-                      periods[i], periods[j]) )
+                dev.copy2pdf(file=
+                    sprintf("distributions-std-%d-delay-%d-trptc-%s-to-%s.pdf",
+                      standardize, delay, names[i], names[j]) )
               }
               else{
-
-                dev.copy2pdf(file= sprintf("distributions-delay-%d-trpt-%s-to-%s.pdf", delay,
-                      periods[i], periods[j]) )
+                dev.copy2pdf(file= sprintf("distributions-std-%d-delay-%d-trpt-%s-to-%s.pdf", standardize,  delay,
+                      names[i], names[j]) )
               } 
             }
             else{
               if(useCost){
-                dev.copy2pdf(file= sprintf("distributions-delay-%d-trpc-%s-to-%s.pdf", delay,
-                      periods[i], periods[j]) ) 
+                dev.copy2pdf(file= sprintf("distributions-std-%d-delay-%d-trpc-%s-to-%s.pdf", standardize,  delay,
+                      names[i], names[j]) ) 
               }
               else{  
-                dev.copy2pdf(file= sprintf("distributions-delay-%d-trp-%s-to-%s.pdf", delay,
-                      periods[i], periods[j]) ) 
+                dev.copy2pdf(file= sprintf("distributions-std-%d-delay-%d-trp-%s-to-%s.pdf", standardize,  delay,
+                      names[i], names[j]) ) 
               }
             }
         }
@@ -169,7 +168,7 @@ for(i in 1:length(O.all) ){
       cex.lab=1.5, bty="n", cex.axis=1.5)
   title( sprintf("Distribution %s", O.names[[i]]))
 
-  dev.copy2pdf(file= sprintf("distributions-delay-%d-%s.pdf", delay,  O.names[[i]] ) )
+  dev.copy2pdf(file= sprintf("distributions-std-%d-delay-%d-%s.pdf", standardize,  delay,  O.names[[i]] ) )
 
 }
 
@@ -191,7 +190,7 @@ for(i in 1:(length(O.all)-1) ){
 #contour(d, levels=a, add=T, col="#00000050", lwd=2)
     title( sprintf("Distribution %s minus %s", O.names[[i]], O.names[[j]]))
 
-    dev.copy2pdf(file= sprintf("distributions-delay-%d-%s-minus-%s.pdf", delay,  O.names[[i]], O.names[[j]] ) )
+    dev.copy2pdf(file= sprintf("distributions-std-%d-delay-%d-%s-minus-%s.pdf", standardize,  delay,  O.names[[i]], O.names[[j]] ) )
   } 
       
 }
@@ -208,8 +207,8 @@ for(i in 1:length(trp$plans)){
         ylab="speed")
     title( sprintf("%s to %s scale %i",
           O.names[trp$plans[[i]]$i], O.names[trp$plans[[i]]$j], s ) )
-    dev.copy2pdf(file= sprintf("distributions-delay-%d-trp-%s-%s-scale-%i.pdf",
-          delay, O.names[trp$plans[[i]]$i], O.names[trp$plans[[i]]$j], s ) ) 
+    dev.copy2pdf(file= sprintf("distributions-std-%d-delay-%d-trp-%s-%s-scale-%i.pdf",
+          standardize,  delay, O.names[trp$plans[[i]]$i], O.names[trp$plans[[i]]$j], s ) ) 
   }
 
 }
