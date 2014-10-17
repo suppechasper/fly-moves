@@ -106,6 +106,7 @@ for(tp  in c(T, F)){
             maxC = max( max(map1[,3]*map1[,4]), max(map2[,3]*map2[,4]),
                         max(map3[,3]*map3[,4]) )
 
+            dev.new(width=10, height=10)
             tmp = plot.binnned.transport.map( trp$plans[[index1]]$trp, xs, ys, col=cols[1],
                 lwd=lwd, cex.axis=1.5, cex.lab=1.5, useTransparancy=transparency,
                 useCost=useCost, maxW=maxW, maxC=maxC )
@@ -144,6 +145,8 @@ for(tp  in c(T, F)){
                       names[i], names[j]) ) 
               }
             }
+
+            dev.off()
         }
       }
 
@@ -161,6 +164,9 @@ for(i in 1:length(O.all) ){
  
 # density[[i]]$z = density[[i]]$z/sum(density[[i]]$z)
 
+            
+  dev.new(width=10, height=10)
+  
   a = seq(0.01, max(density[[i]]$z)+0.031, by=0.03)
   cols = rgb( colorRamp(brewer.pal(name="Oranges", 9))(seq(0, 1, length.out=length(a))) / 255 )
 #contour(density[[i]], levels=a, add=T, col="#00000050", lwd=2)
@@ -169,6 +175,7 @@ for(i in 1:length(O.all) ){
   title( sprintf("Distribution %s", O.names[[i]]))
 
   dev.copy2pdf(file= sprintf("distributions-std-%d-delay-%d-%s.pdf", standardize,  delay,  O.names[[i]] ) )
+  dev.off()
 
 }
 
@@ -178,6 +185,8 @@ for(i in 1:(length(O.all)-1) ){
   
   d = density[[i]] 
   for(j in (i+1):length(O.all)){
+            
+    dev.new(width=10, height=10)
     d = density[[i]] 
     d$z = d$z - density[[j]]$z
   
@@ -191,11 +200,17 @@ for(i in 1:(length(O.all)-1) ){
     title( sprintf("Distribution %s minus %s", O.names[[i]], O.names[[j]]))
 
     dev.copy2pdf(file= sprintf("distributions-std-%d-delay-%d-%s-minus-%s.pdf", standardize,  delay,  O.names[[i]], O.names[[j]] ) )
+  
+    dev.off()
   } 
       
 }
 
 
+
+
+
+#------------old stuff
 
 if(F){
 for(i in 1:length(trp$plans)){

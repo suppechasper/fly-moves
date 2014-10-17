@@ -149,7 +149,7 @@ pc.segment.plot.vectorize <- function(pca, dim, factor, pc){
 
 
 
-pc.segment.plot <- function(mean, dir, factor, pc){
+pc.segment.plot <- function(mean, dir, factor, pc, cex.points=1){
 
   
   n = nrow(mean)
@@ -158,17 +158,17 @@ pc.segment.plot <- function(mean, dir, factor, pc){
 
   plot(mean - dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
       ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
-  points((mean - dir)[2:n, ], pch=19, col="#00000090",cex=2)
+  points((mean - dir)[2:n, ], pch=19, col="#00000090",cex=cex.points)
   title(sprintf("Mean - %d sd * PC %d", factor, pc), cex.main=2)
   
   plot(mean, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
       ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
-  points((mean)[2:n, ], pch=19, col="#00000090",cex=2)
+  points((mean)[2:n, ], pch=19, col="#00000090",cex=cex.points)
   title("Mean", cex.main=2)
   
   plot(mean + dir, pch=19, xlim=xlim, ylim=ylim, asp=1, bty="n", xlab="",
       ylab="", cex.axis=2, cex=2, col="#00000050", type="l", lwd=5)
-  points( (mean+dir)[2:n, ], pch=19, col="#00000090",cex=2)
+  points( (mean+dir)[2:n, ], pch=19, col="#00000090",cex=cex.points)
   title(sprintf("Mean + %d sd * PC %d", factor, pc), cex.main=2)
 }
 
@@ -359,6 +359,108 @@ procrustes.plot.shape <- function(gpa, pcs){
 
 
 
+
+
+procrustes.plot.pcs <- function( gpa, index, O ){
+
+  layout(t(matrix(1:(length(index)*4), nrow=4)) )
+
+  
+
+  library(RColorBrewer)
+  pal = brewer.pal(name="Dark2", n=length(O))
+
+  for(i in 1:length(index) ){  
+    pc = index[i]
+    f=3
+    if(pc==1){
+      f=1;
+    }
+    d = dim( gpa$mshape )
+    dir = f * gpa$pcasd[pc] *matrix(gpa$pcar[,pc] , nrow=d[1])
+    pc.segment.plot(gpa$mshape, dir, f, pc)
+
+    #plot variations
+    se = c()
+    counts = c()
+    nperiods = 0
+    for(i in 1:length(O)){
+      nperiods = length(O[[i]])
+        for(k in 1:length(O[[i]]) ){
+          se = c(se, sum(O[[i]][[k]][,pc]^2))
+            counts = c(counts, nrow(O[[i]][[k]]) )
+        }
+    } 
+    Vtotal = sum(se)/(sum(counts)-1)
+    
+    Vperfly = c()
+    for(i in seq(1, length(se), by=nperiods)){
+      Vperfly = c(Vperfly,
+      sum(se[i:(i+nperiods-1)])/(sum(counts[i:(i+nperiods-1)])-1) )
+      i
+    }
+    Vperflyperodor = se/(counts-1)
+
+    cols = rgb(0,0,0)
+    cols = c(cols, pal)
+    for(i in 1:length(O)){
+      cols = c(cols, rep(pal[i], nperiods))
+    }
+    barplot( c(Vtotal, Vperfly, Vperflyperodor), col=cols)
+
+  }
+
+}
+
+
+
+
+
+
+procrustes.density.plot2 <- function(O, pc, factor, xlab=sprintf("PC %d", pc), legend=rep("", length(O)),
+    col=rep("#000000", length(O) ), lty = rep(1, length(O)), n=1000, lwd=2){
+
+  library(KernSmooth)
+ 
+  xlim <- c(0, 0)
+  for(k in 1:length(O)){
+     r <- range(O[[k]][,pc])
+     xlim[1] <-  min(xlim[1], r[1])
+     xlim[2] <-  max(xlim[2], r[2])
+  }
+
+
+  ylim <- c(0,0)
+  d <- list()
+  means <- list()
+
+  for(k in 1:length(O)){
+    d[[k]] <- bkde(x=O[[k]][, pc], range.x=xlim)
+    means[[k]] <- mean(x=O[[k]][,pc])
+    ylim[2] = max(ylim[2], d[[k]]$y ) 
+  }
+
+  plot( NULL,  bty="n", xlim = xlim, ylim=ylim, xlab=xlab, ylab="density",
+      cex.axis=1.5, cex.lab=1.5, yaxt="s")
+  
+  grid(col="#00000020", lty=1)
+  for(i in 1:length(d) ){
+    lines( d[[i]], type="l", lwd=lwd, col= col[i], lty=lty[i] )
+    
+    abline( v=means[[i]], lwd=1, col=col[i], lty=lty[i])
+  }
+  
+  legend(x="topright", col=col, bty="n", legend=legend, cex=1.5, lwd=2,
+    box.col="gray", bg="white", lty=lty)
+
+
+}
+
+
+
+
+
+
 #--- experimental ---
 
 
@@ -441,7 +543,6 @@ invariant.segments.pca.plot <- function(pca, dim=2, pc=1, factor=1){
 
   pc.segment.plot(mean, dir, sprintf("Mean + %d sd * PC %d", factor, pc))
 }
-
 
 
 
