@@ -42,6 +42,10 @@ extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T,
   step = sqrt( rowSums(v^2) )
   lengths = (step[1:(vn-1)] + step[2:vn] )/2
 
+  va = (v[1:(vn-1), ] + v[2:vn, ])/2.0
+  dir = v2[1:(vn-1), ] + va
+  orientation = rowSums( va * dir) /( sqrt( rowSums(va^2)) * sqrt( rowSums(dir^2) ) )
+  orientation[is.na(orientation)] = 0
 
   angles = rowSums( v[1:(vn-1), ] * v[2:vn, ]) / (step[1:(vn-1)] * step[2:vn])
   angles[angles > 1] = 1
@@ -70,7 +74,7 @@ extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T,
       dorim   = dorim[ind]
       ris = ris[ind, ]
       x = x[ind, ]
-
+      orientation = orientation[ind]
 
       ind = which(v[ind] > uT)
       lengths = lengths[ind]
@@ -81,6 +85,7 @@ extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T,
       dorim   = dorim[ind]
       ris = ris[ind, ]
       x = x[ind, ]
+      orientation = orientation[ind]
 
       ind2 = complete.cases(angles)
       lengths = lengths[ind2]
@@ -92,12 +97,13 @@ extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T,
       dorim   = dorim[ind2]
       x = x[ind2, ]
       ris = ris[ind2, ]
+      orientation = orientation[ind2]
   }
 
 
   list( lengths = lengths, angles=angles, cross = cross, id = index, time = time,
         dorim = dorim, dirim = dirim, curvature = sign(cross)*acos(angles),
-        ris=ris, x = x, u=u, v=v )
+        ris=ris, x = x, u=u, v=v, irim=irim, orim=orim, orientation=orientation )
 
 }
 
@@ -134,6 +140,7 @@ extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6,
         dataSum$angles = dataSum$angles + dataTmp$angles
         dataSum$curvature = dataSum$curvature + dataTmp$curvature
         dataSum$ris = dataSum$ris + dataTmp$ris
+        dataSum$orientation = dataSum$orientation + dataTmp$orientation
     }
 # data[[i]]$length = data[[i]]$length / (nRuns+1) 
     dataSum$cross = dataSum$cross / (nRuns+1) 
@@ -142,6 +149,7 @@ extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6,
     dataSum$angles = dataSum$angles / (nRuns+1) 
     dataSum$curvatureMean = dataSum$curvature / (nRuns+1) 
     dataSum$ris = dataSum$ris / (nRuns+1) 
+    dataSum$orientation = dataSum$orientation / (nRuns+1) 
   
     ind = which(dataSum$u < lT)
     dataSum$lengths = dataSum$lengths[ind]
@@ -154,6 +162,7 @@ extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6,
     dataSum$curvatureOrig   = dataSum$curvatureOrig[ind]
     dataSum$x = dataSum$x[ind, ]
     dataSum$ris  = dataSum$ris[ind, ]
+    dataSum$orientation  = dataSum$orientation[ind]
    
     ind = which(dataSum$v[ind] > uT)
     dataSum$lengths = dataSum$lengths[ind]
@@ -166,6 +175,7 @@ extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6,
     dataSum$curvatureOrig   = dataSum$curvatureOrig[ind]
     dataSum$x = dataSum$x[ind, ]
     dataSum$ris  = dataSum$ris[ind, ]
+    dataSum$orientation  = dataSum$orientation[ind]
 
 
     if(rm.na == T){
@@ -181,6 +191,7 @@ extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6,
         dataSum$curvatureOrig   = dataSum$curvatureOrig[ind]
         dataSum$x = dataSum$x[ind, ]
         dataSum$ris  = dataSum$ris[ind, ]
+        dataSum$orientation  = dataSum$orientation[ind]
 
     }
     dataSum$curvature = sign(dataSum$cross)*acos(dataSum$angles)
@@ -251,6 +262,7 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
     y=c()
     rx=c()
     ry=c()
+    orientation = c()
     for(j in 1:k){
       s = seq(j, n-k+j, by=offset)
       lengths = cbind( lengths, X$lengths[s])
@@ -263,6 +275,7 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
         y = cbind( y,X$x[s,2])
         rx= cbind( rx,X$ris[s,1])
         ry = cbind( ry,X$ris[s,2])
+        orientation = cbind( orientation, X$orientation[s])
 
     }
 
@@ -279,6 +292,7 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
     y = y[ind, ]
     rx = rx[ind, ]
     ry = ry[ind, ]
+    orientation = orientation[ind]
   }
 
 
@@ -302,11 +316,12 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
         C[k, 10] = sum( dirim[k,] > -5 )
         C[k, 11] = which.max(C[k, 8:10])
     }
-  colnames(C) <- c("before", "odor1", "odor2", "odor3", "after", "maxOdor",
-      "timeToOdor", "outer", "middler", "inner", "maxPos");
+  colnames(C) <- c("before.odor", "odor1", "odor2", "odor3", "after.odor",
+      "max.odor", "time.to.odor", "outer", "middler", "inner", "max.pos");
 
   list( lengths = lengths, curvature=curvature, curvatureMean=curvatureMean, dirim=dirim, dorim=dorim,
-      time=time,x=x, y=y, rx=rx, ry=ry, C=as.data.frame(C), id=X$id)
+      time=time,x=x, y=y, rx=rx, ry=ry, C=as.data.frame(C), id=X$id,
+      orientation=orientation)
 
 }
 
@@ -389,6 +404,7 @@ extract.condition.odor <- function(X, C){
         Xafter1 = Xafter1, Xafter2 = Xafter2 )
 
 }
+
 
 
 extract.condition.odor.all <- function(Xlist, Slist){

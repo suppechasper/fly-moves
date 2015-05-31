@@ -115,13 +115,16 @@ for(pc in 1:10){
 }
 
 colnames(Vfly)  = NULL
+rownames(Vfly) = NULL
 colnames(Vodor) = NULL
+rownames(Vodor) = NULL
 
 barplot(Vtotal)
 dev.copy2pdf( file=sprintf("segments-len-%.3d-spectrum-total.pdf", seg.len) )
 
 library(RColorBrewer)
 colsTmp = brewer.pal(name="Dark2", n=length(O))
+
 
 for(k in 1:ncol(Vfly)){
   barplot(Vfly[, k], col=colsTmp[k] )

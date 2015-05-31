@@ -20,6 +20,7 @@ WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles, nRuns
 #extract segments from features
 Slist <- extract.all.segments(WT, k=1)
 
+Z = list()
 for( i in 1:length(Slist) ){
   Z[[i]] = cbind(Slist[[i]]$curvatureMean, Slist[[i]]$lengths)
 }
@@ -33,11 +34,11 @@ for(i in 1:length(Z)){
   O <- extract.condition.odor(Z[[i]], Slist[[i]]$C) 
 
   #put all oders in a list
-  Olist <- list(O$Xbefore1, O$Xbefore2, O$Xduring1, O$Xduring2, O$Xafter1,
+  Olist <- list(O$Xbefore2, O$Xbefore2, O$Xduring1, O$Xduring2, O$Xafter1,
     O$Xafter2)
 
 
-  trp <- pairwise.transport(Xin = Olist, eps=0.000001, scale=-1, d=3, store.plan=T)
+  trp <- pairwise.transport(Xin = Olist, eps=0.0001, scale=-1, store.plan=T)
 
   P <- list()
   for(j in 1:length(trp$plans)){
@@ -49,6 +50,8 @@ for(i in 1:length(Z)){
   
   D = rbind( scale(as.vector(trp$D)) )
 }
+
+
 
 
 

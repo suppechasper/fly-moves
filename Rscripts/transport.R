@@ -3,7 +3,7 @@
 
 #Pairwise Wasserstein distance for list of matrices in Xin
 pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
-    p=2, lambda=0, oType=26, rFactor=2, stop=6, split=1, sType=0,
+    p=2, lambda=0, oType=26, rFactor=2, stop=4, split=2, sType=0,
     weight=as.list(rep(1, length(Xin))) ){
 
 
@@ -24,7 +24,8 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
       if( nr > 0){
 
         print(i)
-        gmra[[index]] <- gmra.create.ipca(X=Xin[[i]], d=d, eps=eps, t=0.9, split=split, stop=stop) 
+        gmra[[index]] <- gmra.create.ikm(X=Xin[[i]], nKids=8, eps=eps,
+            split=split, stop=stop) 
         index = index +1
         indices = c(indices, i)
       }
@@ -67,10 +68,11 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
   else{
     plans = list() 
     dist = matrix( 0, nrow=length(Xin), ncol=length(Xin) )
+    count = 1;
 
       for(i in 1:(length(Xin)-1) ){
         for(j in (i+1):length(Xin)){
-          C = as.matrix(dist(Xin[[i]], Xin[[j]]))^p
+          C = as.matrix(pdist(Xin[[i]], Xin[[j]]))^p
           trp = transport(rep(1/nrow(Xin[[i]]), nrow(Xin[[i]])),
                 rep(1/nrow(Xin[[j]]), nrow(Xin[[j]])), as.matrix(C), lambda=lambda, oType=oType )
             dist[i, j] = trp$cost
@@ -82,7 +84,6 @@ pairwise.transport <- function(Xin, eps=-1, scale=-1, d=2, store.plan = FALSE,
 
 #save(trp, file=sprintf("%s-%d-%d.Rdata", prefix, i, j))
         }
-        magc()
         print(i)
       }
 

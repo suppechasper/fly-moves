@@ -16,7 +16,7 @@ source("../Rscripts/WT_ACV0-files.R")
 
 #extract features
 WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles,
-  nRuns=10, std=0.1, lT=5, uT=0.25)
+  nRuns=10, std=0.1, lT=5, uT=-1)
 
 #extract segments from features
 Slist <- extract.all.segments(WT, k=1)
@@ -27,10 +27,15 @@ for( i in 1:length(Slist) ){
 }
 
 #extracct all sgements based on odor condition
-O <- extract.condition.odor.all.list(Z, Slist) 
+O <- extract.condition.odor.all(Z, Slist) 
 
   
-trp <- pairwise.transport(Xin = O, eps=0.01, scale=-1, d=2, store.plan=F)
+trp <- pairwise.transport(Xin = O, eps=0.01, scale=-1, store.plan=F)
+
+
+
+
+
 
 
 

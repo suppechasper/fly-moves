@@ -361,7 +361,7 @@ procrustes.plot.shape <- function(gpa, pcs){
 
 
 
-procrustes.plot.pcs <- function( gpa, index, O ){
+procrustes.plot.pcs <- function( gpa, index, O){
 
   layout(t(matrix(1:(length(index)*4), nrow=4)) )
 
@@ -406,8 +406,13 @@ procrustes.plot.pcs <- function( gpa, index, O ){
     for(i in 1:length(O)){
       cols = c(cols, rep(pal[i], nperiods))
     }
-    barplot( c(Vtotal, Vperfly, Vperflyperodor), col=cols)
+    x = c(Vtotal, Vperfly, Vperflyperodor)
+    names(x) = NULL
+    c("total", "WT", "Orco", "IR8a", names(O[[1]]), names(O[[2]]),
+          names(O[[3]]) ) 
 
+    bp = barplot( x, col=cols)
+    text(mp, par("usr")[3], labels = names(x), srt = 45, adj = c(1.1,1.1), xpd = TRUE, cex=.9)
   }
 
 }

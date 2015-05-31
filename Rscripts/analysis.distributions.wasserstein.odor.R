@@ -12,7 +12,7 @@ source("../Rscripts/delay.reconstruction.R")
 #directoty. To convert .mat files (rim information files) to csv use
 #rim-mat-2-csv.m in OctaveScripts (should be compatible with Matlab
 
-flies = c("../Rscripts/WT_ACV0-files.R", "../Rscripts/Orco_ACV0-files.R", "../Rscripts/IR8a1_ACV0-files.R")
+flies = c("../Rscripts/WT_ACV0-files.R") #, "../Rscripts/Orco_ACV0-files.R", "../Rscripts/IR8a1_ACV0-files.R")
 fly.type = c("WT", "Orco", "IR8a1")
 delay=1
 standardize=TRUE
@@ -58,7 +58,7 @@ for(i in 1:length(flies)){
 
 
 
-trp <- pairwise.transport(Xin = O.all, eps=0.0001, scale=-1, d=2, store.plan=T,
+trp <- pairwise.transport(Xin = O.all, eps=0.0001, scale=-1, store.plan=T,
     p=2, lambda=0, oType=26, weight=W.all)
 
 
