@@ -23,8 +23,7 @@ Slist <- extract.all.segments(WT, k=1)
 
 Z = list()
 for( i in 1:length(Slist) ){
-  Z[[i]] =  cbind(Slist[[i]]$curvatureMean, Slist[[i]]$lengths,
-        Slist[[i]]$orientation) 
+  Z[[i]] =  scale( cbind(Slist[[i]]$curvatureMean/3.15, Slist[[i]]$lengths/5 ) ) 
 }
 
 D <- c()
@@ -40,21 +39,21 @@ for(i in 1:length(Z)){
 }
 
 
-trp <- pairwise.transport( Xin = Olist, stop=3, eps=0.25, scale=-1, store.plan=F,
-    rFactor=1 )
+trp <- pairwise.transport( Xin = Olist, stop=3, eps=0.4, scale=-1, store.plan=F,
+    rFactor=1, p=1 )
 
 
 
-dir_name = sprintf("../Rwasserstein-c-s-o/Odors-%s", fly_type)
+dir_name = sprintf("../Rwasserstein/Odors-%s", fly_type)
 dir.create( dir_name )
 
 pal = brewer.pal("YlOrRd", n=9)
 
 image(trp$D, col=pal, bty="n", xlab="", ylab="", useRaster=F,  asp=1,
     xaxt="n", yaxt="n")
-a = 0.5/181
+a = 0.5/151
 for(i in 1:29 ){
-  x = i/30 *(1 + 1/181) - 0.5/181 
+  x = i/30 *(1 + 1/151) - 0.5/151 
 
   lines(c(0-a, 1+a), c(x, x), col="black", lwd=1)
   lines(c(x, x), c(0-a, 1+a), col="black", lwd=1)
@@ -63,10 +62,10 @@ dev.copy2eps( file = sprintf("%s/pairwise.eps", dir_name) )
 
 
 Ds = trp$D
-for(i in seq(6, 180, by=6) ){
+for(i in seq(5, 150, by=5) ){
   xi = (i-5):i
-  for(j in seq(6, 180, by=6) ){
-    yi = (j-5):j
+  for(j in seq(5, 150, by=5) ){
+    yi = (j-4):j
     Ds[xi, yi] = Ds[xi, yi] / max( Ds[xi, yi]) 
   }  
 }
@@ -74,7 +73,7 @@ for(i in seq(6, 180, by=6) ){
 image(Ds, col=pal, bty="n", xlab="", ylab="", useRaster=F,  asp=1,
     xaxt="n", yaxt="n")
 for(i in 1:29 ){
-  x = i/30 *(1 + 1/181) - 0.5/181 
+  x = i/30 *(1 + 1/151) - 0.5/151 
   lines(c(0-a, 1+a), c(x, x), col="black", lwd=1)
   lines(c(x, x), c(0-a, 1+a), col="black", lwd=1)
 }
@@ -91,7 +90,7 @@ tsne = Rtsne(X=cmds$points, pca=F, check_duplicates=F)
  
 #color by odor
 ramp = colorRamp(c("magenta", "darkblue"))
-colsAll = rep( c("gold2", "gold2", rgb(ramp(seq(0,1, length.out=4) )/255)), 30)
+colsAll = rep( c("gold2", rgb(ramp(seq(0,1, length.out=4) )/255)), 30)
 cols = colsAll
 
 addLines <- function(X){
@@ -114,15 +113,15 @@ for(k in 1:length(type)){
   points= cmds$points
   pointsTsne = tsne$Y
   if( k > 1){
-    for(i in seq(6, 180, by=6) ){
-      points[(i-5):i, ] = points[(i-5):i, ] - 
-          t( matrix(points[i-5, ], nrow=ncol(points), ncol=6 ))
-      pointsTsne[(i-5):i, ] = pointsTsne[(i-5):i, ] - 
-          t( matrix(pointsTsne[i-5, ], nrow=ncol(pointsTsne), ncol=6 ))
+    for(i in seq(5, 150, by=5) ){
+      points[(i-4):i, ] = points[(i-4):i, ] - 
+          t( matrix(points[i-4, ], nrow=ncol(points), ncol=5 ))
+      pointsTsne[(i-4):i, ] = pointsTsne[(i-4):i, ] - 
+          t( matrix(pointsTsne[i-4, ], nrow=ncol(pointsTsne), ncol=5 ))
     }
   }
 
-  ind = as.vector(rbind(1+6*(0:29), 3+6*(0:29)))
+  ind = as.vector(rbind(1+5*(0:29), 2+5*(0:29)))
 
   points = points[ ind, ] 
   pointsTsne = pointsTsne[ ind, ]

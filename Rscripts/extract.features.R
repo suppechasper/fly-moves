@@ -44,7 +44,7 @@ extract.features <- function(xyFile, irFile, orFile,  index, lT=6, rm.na=T,
 
   va = (v[1:(vn-1), ] + v[2:vn, ])/2.0
   dir = v2[1:(vn-1), ] + va
-  orientation = rowSums( va * dir) /( sqrt( rowSums(va^2)) * sqrt( rowSums(dir^2) ) )
+  orientation = acos( rowSums( va * dir) /( sqrt( rowSums(va^2)) * sqrt( rowSums(dir^2) ) ) )
   orientation[is.na(orientation)] = 0
 
   angles = rowSums( v[1:(vn-1), ] * v[2:vn, ]) / (step[1:(vn-1)] * step[2:vn])
@@ -362,46 +362,15 @@ extract.sample <- function(S, len, off=len/2){
 #given the data X with n rows and conditions C (i.e. the matrix C from
 #extract.features) for each row extract submatrices condition on odor events
 extract.condition.odor <- function(X, C){
-  Xbefore = X[C$maxOdor == 1, ]
-  nb = nrow(Xbefore)
-  nbs = nb/2
-  if(nbs == 0){
-    Xbefore1 = Xbefore
-    Xbefore2 = Xbefore
-  }
-  else{
-    Xbefore1 = Xbefore[1:nbs, ];
-    Xbefore2 = Xbefore[(nbs+1):nb, ]
-  }
+  Xbefore = X[C$max.odor == 1, ]
+  Xduring1 = X[C$max.odor == 2 , ]
+  Xduring2 = X[C$max.odor == 3 , ]
+  Xduring3 = X[C$max.odor == 4 , ]
+  Xafter = X[C$max.odor == 5, ]
 
-  Xduring = X[C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4, ]
-  nd = nrow(Xduring)
-  nds = nd/2
-  if(nds == 0){
-    Xduring1 = Xduring
-    Xduring2 = Xduring
-  }
-  else{
-    Xduring1 = Xduring[1:nds, ]
-    Xduring2 = Xduring[(nds+1):nd, ]
-  }
- 
-  Xafter = X[C$maxOdor == 5, ]
-  na = nrow(Xafter)
-  nas = na/2
-  if(nas == 0){
-    Xafter1 = Xafter
-    Xafter2 = Xafter
-  }
-  else{
-    Xafter1 = Xafter[1:nas, ]
-    Xafter2 = Xafter[(nas+1):na, ] 
-  }
-
-
-  list( Xbefore1 = Xbefore1, Xbefore2 = Xbefore2,
+  list( Xbefore = Xbefore, 
         Xduring1 = Xduring1, Xduring2 = Xduring2,
-        Xafter1 = Xafter1, Xafter2 = Xafter2 )
+        Xduring3 = Xduring3, Xafter = Xafter )
 
 }
 
@@ -440,15 +409,15 @@ extract.condition.odor.all <- function(Xlist, Slist){
 extract.condition.odor.in.out <- function(X, C){
 
  
-  BeforeInner = X[C$maxOdor == 1 & C$maxPos == 3, ]
-  BeforeMiddle = X[C$maxOdor == 1 & C$maxPos == 2, ]
-  BeforeOuter = X[C$maxOdor == 1 & C$maxPos == 1, ]
-  DuringInner = X[ (C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4 ) & C$maxPos == 3, ]
-  DuringMiddle = X[ (C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4 ) & C$maxPos == 2, ]
-  DuringOuter = X[ (C$maxOdor == 2 | C$maxOdor == 3 | C$maxOdor == 4 ) & C$maxPos == 1, ]
-  AfterInner = X[C$maxOdor == 5 & C$maxPos == 3, ]
-  AfterMiddle = X[C$maxOdor == 5 & C$maxPos == 2, ]
-  AfterOuter = X[C$maxOdor == 5 & C$maxPos == 1, ]
+  BeforeInner = X[C$max.odor == 1 & C$maxPos == 3, ]
+  BeforeMiddle = X[C$max.odor == 1 & C$maxPos == 2, ]
+  BeforeOuter = X[C$max.odor == 1 & C$maxPos == 1, ]
+  DuringInner = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$maxPos == 3, ]
+  DuringMiddle = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$maxPos == 2, ]
+  DuringOuter = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$maxPos == 1, ]
+  AfterInner = X[C$max.odor == 5 & C$maxPos == 3, ]
+  AfterMiddle = X[C$max.odor == 5 & C$maxPos == 2, ]
+  AfterOuter = X[C$max.odor == 5 & C$maxPos == 1, ]
   
   res = list(BeforInner = BeforeInner, BeforeMiddle = BeforeMiddle, BeforeOuter
       = BeforeOuter, DuringInner = DuringInner, DuringMiddle = DuringMiddle,
