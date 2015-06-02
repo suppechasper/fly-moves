@@ -249,6 +249,7 @@ extract.all.segments <- function(features, k, rm.jumps=k>1, offset=1 ){
 }
 
 
+
 #extract segements of length k from a single feature set X 
 extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){    
   n = length( X$lengths )
@@ -292,7 +293,7 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
     y = y[ind, ]
     rx = rx[ind, ]
     ry = ry[ind, ]
-    orientation = orientation[ind]
+    orientation = orientation[ind, ]
   }
 
 
@@ -328,39 +329,51 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
 
 
 
+#extract feature vectors from segments
+extract.segment.features <- function(S){
+  F = c()
+  C = c()
+  for(i in 1:nrow(S$lengths) ){
+     
+    ml = mean( S$lengths[i, ] )
+    vl = var( S$lengths[i, ] )
 
-extract.sample.segments <- function(S, len, off=len/2){
-  d = dim(S$lengths)
-  index = 1
-  sample = list()
-  for( i in seq(1,(d[1]-len-1), off) ){
-    sample[[index]] = S[i:(i+len-1), ]
-    index = index +1  
+    mac = mean( abs( S$curvatureMean[i, ] ) )
+    vc = var( S$curvatureMean[i, ] )
+    
+    mo = mean( S$orientation[i,] )
+    mao = mean( abs( S$orientation[i,])  )
+    vo = var( S$orientation[i,] )
+
+    C = rbind(C, S$C[i, ])
+    F = rbind(F, c(ml, vl, mac, vc, mo, vo) )
   }
+
+  colnames(F) <- c("mean.step", "var.step", "mean.abs.curvature",
+      "var.curvature", "mean.orientation", "var.orientation" )
+
+  list(F=F, C=C)
+}
+
+
+#extract feature vectors from segments
+extract.all.segment.features <- function(Slist){
+   Flist = list()
   
- sample
-} 
-
-
-
-
-
-extract.sample <- function(S, len, off=len/2){
-  d = dim(S$lengths)
-  index = 1
-  sample = list()
-  for( i in seq(1,(d[1]-len-1), off) ){
-    sample[[index]] = S[i:(i+len-1), ]
-    index = index +1  
+  for(i in 1:length(Slist)){
+    Flist[[i]] = extract.segment.features(Slist[[i]]) 
+    print(i)
   }
-  
- sample
-} 
+
+  Flist
+}
+
+
 
 
 
 #given the data X with n rows and conditions C (i.e. the matrix C from
-#extract.features) for each row extract submatrices condition on odor events
+#extract.segments) for each row extract submatrices condition on odor events
 extract.condition.odor <- function(X, C){
   Xbefore = X[C$max.odor == 1, ]
   Xduring1 = X[C$max.odor == 2 , ]
@@ -409,15 +422,15 @@ extract.condition.odor.all <- function(Xlist, Slist){
 extract.condition.odor.in.out <- function(X, C){
 
  
-  BeforeInner = X[C$max.odor == 1 & C$maxPos == 3, ]
-  BeforeMiddle = X[C$max.odor == 1 & C$maxPos == 2, ]
-  BeforeOuter = X[C$max.odor == 1 & C$maxPos == 1, ]
-  DuringInner = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$maxPos == 3, ]
-  DuringMiddle = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$maxPos == 2, ]
-  DuringOuter = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$maxPos == 1, ]
-  AfterInner = X[C$max.odor == 5 & C$maxPos == 3, ]
-  AfterMiddle = X[C$max.odor == 5 & C$maxPos == 2, ]
-  AfterOuter = X[C$max.odor == 5 & C$maxPos == 1, ]
+  BeforeInner = X[C$max.odor == 1 & C$max.pos == 3, ]
+  BeforeMiddle = X[C$max.odor == 1 & C$max.pos == 2, ]
+  BeforeOuter = X[C$max.odor == 1 & C$max.pos == 1, ]
+  DuringInner = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$max.pos == 3, ]
+  DuringMiddle = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$max.pos == 2, ]
+  DuringOuter = X[ (C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ) & C$max.pos == 1, ]
+  AfterInner = X[C$max.odor == 5 & C$max.pos == 3, ]
+  AfterMiddle = X[C$max.odor == 5 & C$max.pos == 2, ]
+  AfterOuter = X[C$max.odor == 5 & C$max.pos == 1, ]
   
   res = list(BeforInner = BeforeInner, BeforeMiddle = BeforeMiddle, BeforeOuter
       = BeforeOuter, DuringInner = DuringInner, DuringMiddle = DuringMiddle,
