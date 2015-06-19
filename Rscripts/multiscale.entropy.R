@@ -1,5 +1,5 @@
 
-extract.segs <- function(X, time, k, offset = k/2, rm.jumps=TRUE){
+extract.segs <- function(X, time, k, offset = k, rm.jumps=TRUE){
   
 
   n = nrow(X)

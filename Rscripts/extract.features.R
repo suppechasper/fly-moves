@@ -375,18 +375,44 @@ extract.all.segment.features <- function(Slist){
 #given the data X with n rows and conditions C (i.e. the matrix C from
 #extract.segments) for each row extract submatrices condition on odor events
 extract.condition.odor <- function(X, C){
+  if( is.matrix(X) && ncol(X) > 1){
   Xbefore = X[C$max.odor == 1, ]
   Xduring1 = X[C$max.odor == 2 , ]
   Xduring2 = X[C$max.odor == 3 , ]
   Xduring3 = X[C$max.odor == 4 , ]
   Xafter = X[C$max.odor == 5, ]
+  }
+  else{
+    Xbefore = X[ C$max.odor == 1]
+    Xduring1 = X[ C$max.odor == 2 ]
+    Xduring2 = X[ C$max.odor == 3 ]
+    Xduring3 = X[ C$max.odor == 4 ]
+    Xafter = X[ C$max.odor == 5 ]
 
+  }
   list( Xbefore = Xbefore, 
         Xduring1 = Xduring1, Xduring2 = Xduring2,
         Xduring3 = Xduring3, Xafter = Xafter )
 
 }
 
+extract.condition.odor2 <- function(X, C){
+  if( is.matrix(X) && ncol(X) > 1){
+  Xbefore = X[C$max.odor == 1, ]
+  Xduring = X[C$max.odor == 2 || C$max.odor == 3 || C$max.odor == 4 , ]
+  Xafter = X[C$max.odor == 5, ]
+  }
+  else{
+    Xbefore = X[ C$max.odor == 1]
+    Xduring = X[C$max.odor == 2 || C$max.odor == 3 || C$max.odor == 4 ]
+    Xafter = X[ C$max.odor == 5 ]
+
+  }
+  list( Xbefore = Xbefore, 
+        Xduring = Xduring, 
+        Xafter = Xafter )
+
+}
 
 
 extract.condition.odor.all <- function(Xlist, Slist){
