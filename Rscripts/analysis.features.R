@@ -16,7 +16,7 @@ fly_type = "WT"
 seg.len = 20
 
 #extract features
-if(F){
+if(T){
 WT <- extract.all.features.expected(xyFiles, innerRimFiles, outerRimFiles, nRuns=10)
 }
 

@@ -337,20 +337,28 @@ extract.segment.features <- function(S){
      
     ml = mean( S$lengths[i, ] )
     vl = var( S$lengths[i, ] )
+    minl = min( S$lengths[i, ] )
+    maxl = max( S$lengths[i, ] )
 
     mac = mean( abs( S$curvatureMean[i, ] ) )
     vc = var( S$curvatureMean[i, ] )
+    minc = min( S$curvatureMean[i, ] )
+    maxc = max( S$curvatureMean[i, ] )
     
     mo = mean( S$orientation[i,] )
     mao = mean( abs( S$orientation[i,])  )
     vo = var( S$orientation[i,] )
+    mino = min( S$orientation[i, ] )
+    maxo = max( S$orientation[i, ] )
 
     C = rbind(C, S$C[i, ])
-    F = rbind(F, c(ml, vl, mac, vc, mo, vo) )
+    F = rbind(F, c(ml, vl, minl, maxl, mac, vc, minc, maxc, mo, vo, mino, maxo) )
   }
 
-  colnames(F) <- c("mean.step", "var.step", "mean.abs.curvature",
-      "var.curvature", "mean.orientation", "var.orientation" )
+  colnames(F) <- c("mean.step", "var.step", "min.step", "max.step",
+      "mean.abs.curvature", "var.curvature", "min.curvature", "max.curvature",
+      "mean.orientation", "var.orientation", "min.orientation",
+      "max.orientation" )
 
   list(F=F, C=C)
 }
@@ -399,12 +407,12 @@ extract.condition.odor <- function(X, C){
 extract.condition.odor2 <- function(X, C){
   if( is.matrix(X) && ncol(X) > 1){
   Xbefore = X[C$max.odor == 1, ]
-  Xduring = X[C$max.odor == 2 || C$max.odor == 3 || C$max.odor == 4 , ]
+  Xduring = X[C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 , ]
   Xafter = X[C$max.odor == 5, ]
   }
   else{
     Xbefore = X[ C$max.odor == 1]
-    Xduring = X[C$max.odor == 2 || C$max.odor == 3 || C$max.odor == 4 ]
+    Xduring = X[C$max.odor == 2 | C$max.odor == 3 | C$max.odor == 4 ]
     Xafter = X[ C$max.odor == 5 ]
 
   }
