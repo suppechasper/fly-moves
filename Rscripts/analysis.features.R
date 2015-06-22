@@ -13,7 +13,7 @@ source("../Rscripts/delay.reconstruction.R")
 #rim-mat-2-csv.m in OctaveScripts (should be compatible with Matlab
 source("../Rscripts/WT_ACV0-files.R")
 fly_type = "WT"
-seg.len = 20
+seg.len = 5
 
 #extract features
 if(T){

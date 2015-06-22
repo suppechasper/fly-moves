@@ -207,7 +207,8 @@ extract.all.features.expected <- function(xyFiles, irFiles, orFiles, lT=6,
 #get rim data for file i by circle fitting
 get.inner.rim <- function(file){ 
   library(circular)
-  x <- read.table( file, sep=",", header=F, colClasses="numeric")
+  print(file)
+  x <- read.table( file, sep=",", header=FALSE, colClasses="numeric")
   
   x <- x[1:(nrow(x)-1), ]
   circ = lsfit.circle(x)
@@ -222,7 +223,7 @@ get.inner.rim <- function(file){
 get.outer.rim <- function(file){
   library(circular)
 
-  x <- read.table( file, sep=",", header=F, colClasses="numeric")
+  x <- read.table( file, sep=",", header=FALSE, colClasses="numeric")
   
   x <- x[1:(nrow(x)-1), ]
   circ = lsfit.circle(x)
@@ -283,22 +284,24 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
   if(rm.jumps){
     jump = time[,k] - time[,1]
     ind  = which(jump == ( k-1))
-    lengths = lengths[ind, ]
-    curvature = curvature[ind, ]  
-    curvatureMean = curvatureMean[ind, ]  
-    dirim = dirim[ind, ]
-    dorim = dorim[ind, ]
-    time = time[ind, ]
-    x = x[ind, ]
-    y = y[ind, ]
-    rx = rx[ind, ]
-    ry = ry[ind, ]
-    orientation = orientation[ind, ]
+    
+    lengths = matrix(lengths[ind, ], ncol=k)  
+    curvature = matrix(curvature[ind, ], ncol=k)  
+    curvatureMean = matrix(curvatureMean[ind, ], ncol=k)    
+    dirim = matrix(dirim[ind, ], ncol=k)
+    dorim = matrix(dorim[ind, ], ncol=k)
+    time = matrix(time[ind, ], ncol=k)
+    x = matrix(x[ind, ], ncol=k)
+    y = matrix(y[ind, ], ncol=k)
+    rx = matrix(rx[ind, ], ncol=k)
+    ry = matrix(ry[ind, ], ncol=k)
+    orientation = matrix(orientation[ind, ], ncol=k)
   }
 
 
-  C = matrix(0, nrow=nrow(lengths), ncol=11)
 
+  C = matrix(0, nrow=nrow(lengths), ncol=11)
+  if(nrow(C) > 0){
     start1 = which(X$time > 5400 & X$dirim > 0)
     start1 = X$time[start1[1]]
     start2 = start1+300
@@ -317,6 +320,7 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
         C[k, 10] = sum( dirim[k,] > -5 )
         C[k, 11] = which.max(C[k, 8:10])
     }
+  }
   colnames(C) <- c("before.odor", "odor1", "odor2", "odor3", "after.odor",
       "max.odor", "time.to.odor", "outer", "middler", "inner", "max.pos");
 
@@ -328,10 +332,34 @@ extract.segments  <- function(X, k, rm.jumps=k>1, offset = 1){
 
 
 
+##
+extract.segment.covariance <- function(S){
+  Features = matrix(0, ncol=2, nrow=nrow(S$x) )
+  C = c()
+  if(nrow(Features) >0 ){
+  for(i in 1:nrow(Features) ){
+    Features[i, ] <- prcomp(cbind(S$x[i, ], S$y[i, ]), retx=FALSE )$sdev
+    C = rbind(C, S$C[i, ])
+  }
+  }
+
+  list(F=Features, C=C)
+}
+extract.all.segment.covariance <- function(Slist){
+   Flist = list()
+  
+  for(i in 1:length(Slist)){
+    Flist[[i]] = extract.segment.covariance(Slist[[i]]) 
+    print(i)
+  }
+
+  Flist
+}
+
 
 #extract feature vectors from segments
 extract.segment.features <- function(S){
-  F = c()
+  Features = c()
   C = c()
   for(i in 1:nrow(S$lengths) ){
      
@@ -352,7 +380,7 @@ extract.segment.features <- function(S){
     maxo = max( S$orientation[i, ] )
 
     C = rbind(C, S$C[i, ])
-    F = rbind(F, c(ml, vl, minl, maxl, mac, vc, minc, maxc, mo, vo, mino, maxo) )
+    Features = rbind(Features, c(ml, vl, minl, maxl, mac, vc, minc, maxc, mo, vo, mino, maxo) )
   }
 
   colnames(F) <- c("mean.step", "var.step", "min.step", "max.step",
@@ -360,7 +388,7 @@ extract.segment.features <- function(S){
       "mean.orientation", "var.orientation", "min.orientation",
       "max.orientation" )
 
-  list(F=F, C=C)
+  list(F=Features, C=C)
 }
 
 
